@@ -118,6 +118,7 @@ class GoogleJulesMCP {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
+          // === CORE TASK MANAGEMENT ===
           {
             name: 'jules_create_task',
             description: 'Create a new task in Google Jules with repository and description',
@@ -152,6 +153,24 @@ class GoogleJulesMCP {
                 },
               },
               required: ['taskId'],
+            },
+          },
+          {
+            name: 'jules_list_tasks',
+            description: 'List all Jules tasks with their status',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                status: {
+                  type: 'string',
+                  enum: ['all', 'active', 'pending', 'completed', 'paused'],
+                  description: 'Filter tasks by status',
+                },
+                limit: {
+                  type: 'number',
+                  description: 'Maximum number of tasks to return (default 10)',
+                },
+              },
             },
           },
           {
@@ -200,24 +219,7 @@ class GoogleJulesMCP {
               required: ['taskId'],
             },
           },
-          {
-            name: 'jules_list_tasks',
-            description: 'List all Jules tasks with their status',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                status: {
-                  type: 'string',
-                  enum: ['all', 'active', 'pending', 'completed', 'paused'],
-                  description: 'Filter tasks by status',
-                },
-                limit: {
-                  type: 'number',
-                  description: 'Maximum number of tasks to return (default 10)',
-                },
-              },
-            },
-          },
+          // === ADVANCED TASK OPERATIONS ===
           {
             name: 'jules_analyze_code',
             description: 'Analyze code changes and diff in a Jules task',
@@ -259,59 +261,10 @@ class GoogleJulesMCP {
               required: ['tasks'],
             },
           },
-          {
-            name: 'jules_screenshot',
-            description: 'Take a screenshot of current Jules page for debugging',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                taskId: {
-                  type: 'string',
-                  description: 'Optional task ID to navigate to first',
-                },
-                filename: {
-                  type: 'string',
-                  description: 'Optional filename for screenshot',
-                },
-              },
-            },
-          },
-          {
-            name: 'jules_get_cookies',
-            description: 'Get current browser cookies for session persistence',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                format: {
-                  type: 'string',
-                  enum: ['json', 'string'],
-                  description: 'Output format for cookies (default: json)',
-                },
-              },
-            },
-          },
-          {
-            name: 'jules_set_cookies',
-            description: 'Set browser cookies from string or JSON for authentication',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                cookies: {
-                  type: 'string',
-                  description: 'Cookies as JSON string or cookie string format',
-                },
-                format: {
-                  type: 'string',
-                  enum: ['json', 'string'],
-                  description: 'Format of input cookies (default: json)',
-                },
-              },
-              required: ['cookies'],
-            },
-          },
+          // === SESSION & AUTHENTICATION MANAGEMENT ===
           {
             name: 'jules_session_info',
-            description: 'Get current session configuration and status',
+            description: 'Get current session configuration and authentication status',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -346,6 +299,57 @@ class GoogleJulesMCP {
                     }
                   }
                 }
+              },
+            },
+          },
+          {
+            name: 'jules_get_cookies',
+            description: 'Extract current browser cookies for session persistence and backup',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                format: {
+                  type: 'string',
+                  enum: ['json', 'string'],
+                  description: 'Output format for cookies (default: json)',
+                },
+              },
+            },
+          },
+          {
+            name: 'jules_set_cookies',
+            description: 'Set browser cookies from string or JSON for authentication',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                cookies: {
+                  type: 'string',
+                  description: 'Cookies as JSON string or cookie string format',
+                },
+                format: {
+                  type: 'string',
+                  enum: ['json', 'string'],
+                  description: 'Format of input cookies (default: json)',
+                },
+              },
+              required: ['cookies'],
+            },
+          },
+          // === DEBUGGING & UTILITIES ===
+          {
+            name: 'jules_screenshot',
+            description: 'Take a screenshot of current Jules page for debugging and verification',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                taskId: {
+                  type: 'string',
+                  description: 'Optional task ID to navigate to first',
+                },
+                filename: {
+                  type: 'string',
+                  description: 'Optional filename for screenshot',
+                },
               },
             },
           },
@@ -996,14 +1000,39 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
   }
 
-  // Cookie management
+  // Cookie management - Fixed parsing
   private parseCookiesFromString(cookieString: string): Array<{name: string, value: string, domain: string}> {
-    return cookieString.split(';').map(cookie => {
-      const [nameValue, ...rest] = cookie.trim().split('=');
-      const [name, value] = nameValue.split('=');
-      const domain = rest.find(part => part.trim().startsWith('domain='))?.split('=')[1] || '.google.com';
-      return { name: name.trim(), value: value?.trim() || '', domain };
-    }).filter(cookie => cookie.name && cookie.value);
+    const cookies: Array<{name: string, value: string, domain: string}> = [];
+    
+    // Split by semicolon and process each cookie
+    const parts = cookieString.split(';');
+    
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i].trim();
+      
+      // Skip domain specifications
+      if (part.startsWith('domain=')) {
+        continue;
+      }
+      
+      // Parse name=value pairs
+      const equalIndex = part.indexOf('=');
+      if (equalIndex > 0) {
+        const name = part.substring(0, equalIndex).trim();
+        const value = part.substring(equalIndex + 1).trim();
+        
+        if (name && value) {
+          cookies.push({
+            name,
+            value,
+            domain: '.google.com'
+          });
+        }
+      }
+    }
+    
+    console.error(`Parsed ${cookies.length} cookies from string`);
+    return cookies;
   }
 
   private async loadCookiesFromFile(cookiePath: string): Promise<Array<{name: string, value: string, domain: string}>> {
