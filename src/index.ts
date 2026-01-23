@@ -39,6 +39,8 @@ interface JulesConfig {
   julesApiKey?: string;
   // Path to Jules CLI (e.g., jules.cmd)
   julesCliPath?: string;
+  // Workspace Directory for Jules CLI execution
+  workspaceDir?: string;
 }
 
 // Browserbase session interface

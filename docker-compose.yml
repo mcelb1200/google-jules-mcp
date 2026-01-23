@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  jules-mcp:
+    build: .
+    volumes:
+      # Mount the project workspace. 
+      # REPLACE ./your-project-path WITH THE ACTUAL PATH TO YOUR PROJECT
+      - ./your-project-path:/projects
+      # Persist Jules data
+      - jules-data:/root/.jules-mcp
+    environment:
+      - HEADLESS=true
+      - TIMEOUT=30000
+      - DEBUG=false
+      - SESSION_MODE=fresh
+      # Add other environment variables as needed
+      # - JULES_API_KEY=your_key
+      # - GOOGLE_AUTH_COOKIES=...
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    command: node dist/index.js
+
+volumes:
+  jules-data:

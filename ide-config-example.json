@@ -1,0 +1,30 @@
+{
+  "claude_desktop_config": {
+    "mcpServers": {
+      "google-jules": {
+        "command": "docker",
+        "args": [
+          "run",
+          "-i",
+          "--rm",
+          "-v",
+          "/absolute/path/to/your/project:/projects",
+          "-e",
+          "JULES_API_KEY=your_key_here",
+          "-e",
+          "SESSION_MODE=fresh",
+          "google-jules-mcp"
+        ]
+      }
+    }
+  },
+  "vs_code_mcp_extension_example": {
+    "name": "Google Jules",
+    "command": "scripts/run_docker.bat",
+    "args": ["${workspaceFolder}"],
+    "env": {
+      "SESSION_MODE": "fresh"
+      // "JULES_API_KEY": "your_key_here"  <-- Optional if JULES_API_KEY is defined in ${workspaceFolder}/.env
+    }
+  }
+}

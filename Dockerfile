@@ -13,7 +13,7 @@ RUN npm ci --ignore-scripts
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine
+FROM mcr.microsoft.com/playwright:v1.41.0-jammy
 
 WORKDIR /app
 
@@ -23,11 +23,19 @@ COPY package*.json ./
 # Install only production dependencies (skip prepare script)
 RUN npm ci --only=production --ignore-scripts
 
+# Install Jules CLI globally
+RUN npm install -g @google/jules
+
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
 # Set environment
 ENV NODE_ENV=production
+ENV JULES_CLI_PATH=jules
+ENV WORKSPACE_DIR=/projects
+
+# Create projects directory
+RUN mkdir -p /projects
 
 # Start the MCP server
 CMD ["node", "dist/index.js"]
