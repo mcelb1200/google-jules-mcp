@@ -18,7 +18,7 @@
       }
     }
   },
-  "vs_code_mcp_extension_example": {
+    "vs_code_mcp_extension_example": {
     "name": "Google Jules",
     "command": "scripts/run_docker.bat",
     "args": ["${workspaceFolder}"],
