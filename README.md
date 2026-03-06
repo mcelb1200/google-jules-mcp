@@ -102,7 +102,7 @@ Perfect for remote deployments and cloud hosting:
 SESSION_MODE=browserbase
 BROWSERBASE_API_KEY=your_browserbase_api_key
 BROWSERBASE_PROJECT_ID=your_browserbase_project_id
-BROWSERBASE_SESSION_ID=                    # Optional: use existing session
+BROWSERBASE_SESSION_ID=your_browserbase_session_id                   # Optional: use existing session
 ```
 
 #### 🍪 **Cookie Authentication (Best for Manual Setup)**
