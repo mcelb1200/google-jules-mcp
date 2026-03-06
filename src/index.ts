@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-// @jules: Create a full suite of unit and integration tests for this MCP server.
-// Use a modern testing framework like Jest or Vitest.
-// Ensure coverage for CLI, API, and Browser interaction tiers.
-
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -80,8 +76,8 @@ interface SourceFile {
   status: 'modified' | 'created' | 'deleted' | 'unchanged';
 }
 
-class GoogleJulesMCP {
-  private server: Server;
+export class GoogleJulesMCP {
+  public server: Server;
   private browser: Browser | null = null;
   private page: Page | null = null;
   private config: JulesConfig;
@@ -1931,6 +1927,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
   private async getTaskViaBrowser(args: any) {
     const { taskId } = args;
+    const actualTaskId = this.extractTaskId(taskId);
+    const page = await this.getPage();
 
     try {
       // Navigate to task
@@ -2007,6 +2005,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async sendMessageViaBrowser(args: any) {
+    const { taskId, message } = args;
+    const actualTaskId = this.extractTaskId(taskId);
+    const page = await this.getPage();
 
     try {
       const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
@@ -2049,6 +2050,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async approvePlanViaBrowser(args: any) {
+    const { taskId } = args;
+    const actualTaskId = this.extractTaskId(taskId);
+    const page = await this.getPage();
 
     try {
       const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
@@ -2096,6 +2100,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async resumeTaskViaBrowser(args: any) {
+    const { taskId } = args;
+    const actualTaskId = this.extractTaskId(taskId);
+    const page = await this.getPage();
 
     try {
       const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
@@ -2688,19 +2695,21 @@ ${nextSteps.map((step, index) => `${index + 1}. ${step}`).join('\\n')}
 }
 
 // Handle process cleanup
-process.on('SIGINT', async () => {
-  console.error('Shutting down Jules MCP Server...');
-  process.exit(0);
-});
+if (process.env.NODE_ENV !== 'test') {
+  process.on('SIGINT', async () => {
+    console.error('Shutting down Jules MCP Server...');
+    process.exit(0);
+  });
 
-process.on('SIGTERM', async () => {
-  console.error('Shutting down Jules MCP Server...');
-  process.exit(0);
-});
+  process.on('SIGTERM', async () => {
+    console.error('Shutting down Jules MCP Server...');
+    process.exit(0);
+  });
 
-// Start the server
-const server = new GoogleJulesMCP();
-server.run().catch((error) => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
+  // Start the server
+  const server = new GoogleJulesMCP();
+  server.run().catch((error) => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
+}
