@@ -9,6 +9,13 @@ A Model Context Protocol (MCP) server for automating Google Jules - the AI codin
 - **Token Efficient CLI**: Execute Jules commands directly via the local CLI for maximum token efficiency.
 - **Hybrid Execution**: Automatically falls back to browser automation if an API key is not provided.
 
+### 🦞 **Lobster Pattern Orchestration** (NEW!)
+- **Brain/Muscles Architecture**: Explicitly designed for the "Lobster" pattern where the agent (Brain) orchestrates Jules (Muscles) via named contracts.
+- **Contract-Based Sub-Tasking**: Run multiple concurrent sessions on the same branch by using unique `taskId` values.
+- **Automated Workflow**: Instruction files automatically move from `.jules/backlog/` to `.jules/active/` upon delegation.
+- **Local Audit Journaling**: Audit reports are automatically persisted to `.jules/audit/` for repository-wide traceability.
+- **Tiered Discovery**: Smart fallback from explicit instruction files to codebase markers (`@jules`).
+
 ### 🎯 **Task Management**
 - **Create Tasks**: Automatically create Jules tasks with repository and description
 - **Monitor Progress**: Track task status and get real-time updates
@@ -71,7 +78,7 @@ A Model Context Protocol (MCP) server for automating Google Jules - the AI codin
 
 ```bash
 # Clone the repository
-git clone https://github.com/samihalawa/google-jules-mcp.git
+git clone https://github.com/mcelb1200/google-jules-mcp.git
 cd google-jules-mcp
 
 # Install dependencies

@@ -263,6 +263,10 @@ export class GoogleJulesMCP {
                   type: 'string',
                   description: 'Git branch. Auto-detected if omitted.',
                 },
+                taskId: {
+                  type: 'string',
+                  description: 'Unique identifier for this sub-task (e.g., feature-part-1). Allows concurrent tasks on the same branch.',
+                },
                 marker: {
                   type: 'string',
                   description: 'Marker string to look for in code (default: @jules)',
@@ -270,6 +274,14 @@ export class GoogleJulesMCP {
                 pushFirst: {
                   type: 'boolean',
                   description: 'Whether to push the current branch to origin before initiating task (default: true)',
+                },
+                instruction: {
+                  type: 'string',
+                  description: 'Full instruction text for Jules (overrides markers and instructionFile).',
+                },
+                instructionFile: {
+                  type: 'string',
+                  description: 'Path to a markdown file containing detailed instructions (e.g., .jules/active/task.md).',
                 },
               }
             },
@@ -286,6 +298,33 @@ export class GoogleJulesMCP {
                 },
               },
               required: ['taskId'],
+            },
+          },
+          {
+            name: 'jules_conclude_task',
+            description: 'Finalizes a Jules session by archiving instructions. Handles completed and incomplete transitions.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                taskId: {
+                  type: 'string',
+                  description: 'Jules Task ID or shorthand (e.g. branch name).',
+                },
+                status: {
+                  type: 'string',
+                  enum: ['completed', 'incomplete'],
+                  description: 'Outcome status of the session.',
+                },
+                remainingWork: {
+                  type: 'string',
+                  description: 'If incomplete, describe the remaining work to be re-issued to the backlog.',
+                },
+                residualTaskId: {
+                  type: 'string',
+                  description: 'Optional name for the re-issued backlog file (defaults to [taskId]-residual).',
+                },
+              },
+              required: ['taskId', 'status'],
             },
           },
           {
@@ -455,21 +494,6 @@ export class GoogleJulesMCP {
               },
             },
           },
-          {
-            name: "jules_cli",
-            description: "Execute a command using the Jules CLI for token efficiency",
-            inputSchema: {
-              type: "object",
-              properties: {
-                args: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "Arguments to pass to the jules command",
-                },
-              },
-              required: ["args"],
-            },
-          },
         ],
       };
     });
@@ -493,9 +517,12 @@ export class GoogleJulesMCP {
             return await this.checkFeedback(args);
           case 'jules_audit_report':
             return await this.generateAuditReport(args);
+          case 'jules_conclude_task':
+            return await this.concludeTask(args);
           case 'jules_code_review':
             return await this.getCodeReview(args);
           case 'jules_delegate_task':
+            return await this.initiateDelegation(args);
           case 'jules_list_tasks':
             return await this.listTasks(args);
           case 'jules_analyze_code':
@@ -1471,7 +1498,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async initiateDelegation(args: any) {
-    let { repository, branch, marker = "@jules", pushFirst = true } = args;
+    let { repository, branch, taskId, marker = "@jules", pushFirst = true, instruction, instructionFile } = args;
 
     // Auto-detect context if missing
     if (!repository || !branch) {
@@ -1485,8 +1512,35 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     let results = [];
+    let activeTaskId = taskId || branch || "default";
 
-    // Step 1: Push if requested
+    // Step 1: Deduplication Check (Prevent Redundant Tasks)
+    if (this.config.julesApiKey) {
+      try {
+        const existingSessions = await this.listSessionsViaApi();
+        // Match by repo, branch AND taskId (embedded in title or prompt)
+        const activeDuplicate = existingSessions.find(s => {
+          const repoMatch = s.sourceContext?.source?.toLowerCase() === `sources/github/${repository}`.toLowerCase();
+          const branchMatch = s.sourceContext?.githubRepoContext?.startingBranch === branch;
+          const taskIdMatch = taskId ? (s.title?.includes(`[${taskId}]`) || s.prompt?.includes(`[${taskId}]`)) : true;
+          const isActive = ['QUEUED', 'CREATING', 'RUNNING', 'AWAITING_USER_FEEDBACK', 'AWAITING_PLAN_APPROVAL'].includes(s.state);
+          return repoMatch && branchMatch && taskIdMatch && isActive;
+        });
+
+        if (activeDuplicate) {
+          return {
+            content: [{
+              type: "text",
+              text: `⚠ Concurrency Intercept: A Jules session (${activeDuplicate.name.split('/').pop()}) for task '${activeTaskId}' is already ACTIVE on branch '${branch}'.\n\nTo run concurrent sessions, provide a unique 'taskId' to the tool.`
+            }]
+          };
+        }
+      } catch (e) {
+        console.error("Deduplication check failed, proceeding anyway:", e);
+      }
+    }
+
+    // Step 2: Push if requested
     if (pushFirst) {
       try {
         console.error(`Pushing branch ${branch} to origin...`);
@@ -1497,38 +1551,125 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       }
     }
 
-    // Step 2: Initiate Jules Task
-    // Prompt specifically designed for delegated tasks
-    const prompt = `I have added code markers starting with '${marker}' in this branch. Please scan the repository, find these markers, and implement the requested changes for each one. Once found, remove the markers as you implement the fixes.`;
+    // Step 2: Determine Prompt (Tiered Strategy)
+    let finalPrompt = instruction;
+    let strategy = "marker-based";
+
+    // 1. Check for explicit raw instruction
+    if (finalPrompt) {
+      strategy = "explicit instruction text";
+    }
+
+    // 2. Check for explicit instruction file
+    if (!finalPrompt && instructionFile) {
+      try {
+        const fullPath = path.resolve(process.cwd(), instructionFile);
+        finalPrompt = await fs.readFile(fullPath, "utf8");
+        strategy = `instruction file: ${instructionFile}`;
+      } catch (error: any) {
+        results.push(`⚠ Could not read explicit instruction file ${instructionFile}: ${error.message}`);
+      }
+    }
+
+    // 3. Auto-detect from convention (Active or Backlog)
+    let instructionFileToMove: string | undefined;
+    if (!finalPrompt && (taskId || branch)) {
+      const searchTerms = taskId ? [taskId] : [
+        branch!,
+        branch!.replace(/\//g, "-"),
+        branch!.split("/").pop() || "task"
+      ];
+
+      const searchConfigs = [
+        { dir: ".jules/active", move: false },
+        { dir: ".jules/backlog", move: true }
+      ];
+
+      for (const config of searchConfigs) {
+        for (const term of searchTerms) {
+          const p = `${config.dir}/${term}.md`;
+          try {
+            const fullPath = path.resolve(process.cwd(), p);
+            const content = await fs.readFile(fullPath, "utf8");
+            if (content && content.trim().length > 0) {
+              finalPrompt = content;
+              if (!taskId) activeTaskId = term;
+              strategy = `auto-detected in ${config.dir}: ${p}`;
+              if (config.move) instructionFileToMove = p;
+              break;
+            }
+          } catch (e) {}
+        }
+        if (finalPrompt) break;
+      }
+
+      // Fallback for instructions.md
+      if (!finalPrompt) {
+        try {
+          const fullPath = path.resolve(process.cwd(), "instructions.md");
+          finalPrompt = await fs.readFile(fullPath, "utf8");
+          strategy = "fallback to instructions.md";
+        } catch (e) {}
+      }
+    }
+
+    // 4. Fallback to marker prompt
+    if (!finalPrompt) {
+      finalPrompt = `I have added code markers starting with '${marker}' in this branch. Please scan the repository, find these markers, and implement the requested changes for each one. Once found, remove the markers as you implement the fixes.`;
+      strategy = `marker-based (${marker})`;
+    }
+
+    results.push(`ℹ Delegation Strategy: ${strategy}`);
+
+    // Step 4: Final Prompt Prep (Inject Task Identifier)
+    const decoratedPrompt = taskId ? `Task: [${taskId}]\n\n${finalPrompt}` : finalPrompt;
+    const taskTitle = taskId ? `${activeTaskId} [${taskId}]` : activeTaskId;
 
     try {
       let taskResult;
-      // REST API is more reliable for direct prompts
+      // REST API is more reliable for long prompts (Muscles pattern)
       if (this.config.julesApiKey) {
         taskResult = await this.createTaskViaApi({
-          description: prompt,
+          description: decoratedPrompt,
+          title: taskTitle,
           repository,
           branch,
           type: "delegated",
           marker
         });
         results.push(`✓ Jules task initiated via REST API.`);
+
+        // Relocate instruction file if it came from backlog
+        if (instructionFileToMove) {
+          try {
+            const backlogPath = path.resolve(process.cwd(), instructionFileToMove);
+            const activeDir = path.resolve(process.cwd(), ".jules/active");
+            const fileName = path.basename(instructionFileToMove);
+            const targetPath = path.join(activeDir, fileName);
+
+            await fs.mkdir(activeDir, { recursive: true });
+            await fs.rename(backlogPath, targetPath);
+            results.push(`➡ Relocated instruction: ${instructionFileToMove} -> .jules/active/${fileName}`);
+          } catch (e: any) {
+            results.push(`⚠ Failed to relocate instruction file: ${e.message}`);
+          }
+        }
       } else {
         // Fallback to CLI
         taskResult = await this.createTaskViaCli({
-          description: prompt,
+          description: finalPrompt,
           repository,
           type: "delegated",
           marker
         });
-        results.push(`✓ Jules task initiated via CLI (Note: CLI may use default branch unless remote VM is pre-synced).`);
+        results.push(`✓ Jules task initiated via CLI (Note: Large prompts may be truncated).`);
       }
 
       return {
         content: [
           {
             type: "text",
-            text: `Delegation Initiation Results:\n\n${results.join("\n")}\n\nJules is now scanning your branch for '${marker}' markers.`
+            text: `Delegation Results:\n\n${results.join("\n")}\n\nJules is now operating on your plan.`
           }
         ]
       };
@@ -1618,6 +1759,22 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     return {
       content: [{ type: "text", text: `# Feedback Required\n\n${report}` }]
     };
+  }
+
+  private async listSessionsViaApi(): Promise<any[]> {
+    if (!this.config.julesApiKey) return [];
+    try {
+      const response = await axios.get(
+        "https://jules.googleapis.com/v1alpha/sessions",
+        {
+          headers: { "x-goog-api-key": this.config.julesApiKey }
+        }
+      );
+      return response.data.sessions || [];
+    } catch (e) {
+      console.error("Failed to list sessions via API:", e);
+      return [];
+    }
   }
 
   private async createTaskViaApi(args: any) {
@@ -2240,10 +2397,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
   private async listTasksViaCli(args: any) {
     const { status = 'all' } = args;
-    let cliArgs = ["task", "list"];
-    if (status !== 'all') {
-      cliArgs.push("--status", status);
-    }
+    let cliArgs = ["remote", "list", "--session"];
 
     const output = await this.runJulesCli(cliArgs);
     return {
@@ -2500,12 +2654,109 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         `*Report generated via Google Jules MCP Audit Tier.*`
       ].join('\n');
 
+      // 7. Save to local audit log (Brain pattern)
+      let localPath = "";
+      try {
+        const auditDir = path.resolve(process.cwd(), ".jules/audit");
+        await fs.mkdir(auditDir, { recursive: true });
+        const fileName = `${actualTaskId}.audit.md`;
+        const auditFile = path.join(auditDir, fileName);
+        await fs.writeFile(auditFile, report, "utf8");
+        localPath = `.jules/audit/${fileName}`;
+        console.error(`Audit report saved to ${auditFile}`);
+      } catch (e: any) {
+        console.error(`Failed to save audit report locally: ${e.message}`);
+      }
+
       return {
-        content: [{ type: "text", text: report }]
+        content: [{
+          type: "text",
+          text: (localPath ? `✅ Audit report recorded to ${localPath}\n\n` : "") + report
+        }]
       };
     } catch (error: any) {
       throw new Error(`Audit Report Generation Failed: ${error.message}`);
     }
+  }
+
+  private async concludeTask(args: any) {
+    const { taskId, status, remainingWork, residualTaskId } = args;
+    const actualTaskId = this.extractTaskId(taskId);
+    const activeDir = path.resolve(process.cwd(), ".jules/active");
+    const archiveDir = path.resolve(process.cwd(), ".jules/archive");
+    const backlogDir = path.resolve(process.cwd(), ".jules/backlog");
+
+    let results = [];
+    let sourceFile = "";
+
+    // 1. Locate the instruction file in active/
+    const possibleNames = taskId ? [taskId, `${taskId}.md`] : [];
+    try {
+      const detected = await this.detectGitContext();
+      if (detected.branch) {
+        possibleNames.push(detected.branch, `${detected.branch}.md`, detected.branch.replace(/\//g, "-") + ".md");
+      }
+    } catch (e) {}
+
+    for (const name of possibleNames) {
+      const p = path.join(activeDir, name.endsWith(".md") ? name : `${name}.md`);
+      try {
+        await fs.access(p);
+        sourceFile = p;
+        break;
+      } catch (e) {}
+    }
+
+    if (!sourceFile) {
+      try {
+        const files = await fs.readdir(activeDir);
+        const found = files.find(f => f.includes(actualTaskId));
+        if (found) sourceFile = path.join(activeDir, found);
+      } catch (e) {}
+    }
+
+    if (!sourceFile) {
+      results.push(`⚠ Could not find instruction file for ${actualTaskId} in .jules/active/. Archiving file movement skipped.`);
+    }
+
+    // 2. Perform Movement
+    try {
+      await fs.mkdir(archiveDir, { recursive: true });
+      if (sourceFile) {
+        const baseName = path.basename(sourceFile);
+        const targetName = status === 'completed' ? baseName : `${actualTaskId}.incomplete.md`;
+        const targetPath = path.join(archiveDir, targetName);
+
+        if (status === 'incomplete' && remainingWork) {
+          const residualName = residualTaskId || `${actualTaskId}-residual`;
+          const residualFile = `${residualName}.md`;
+
+          // Append reference before moving
+          const content = await fs.readFile(sourceFile, "utf8");
+          const updatedContent = `${content}\n\n### 🔄 Residual Reference\nThis task was incomplete. Remaining work is re-issued to: \`.jules/backlog/${residualFile}\``;
+          await fs.writeFile(sourceFile, updatedContent, "utf8");
+
+          // Create backlog file
+          await fs.mkdir(backlogDir, { recursive: true });
+          const backlogPath = path.join(backlogDir, residualFile);
+          const backlogContent = `## Task: ${residualName} (Residual)\n**Original Session**: ${actualTaskId}\n\n### Remaining Work\n${remainingWork}`;
+          await fs.writeFile(backlogPath, backlogContent, "utf8");
+          results.push(`✓ Re-issued remaining work to .jules/backlog/${residualFile}`);
+        }
+
+        await fs.rename(sourceFile, targetPath);
+        results.push(`✓ Archived: .jules/active/${baseName} -> .jules/archive/${targetName}`);
+      }
+    } catch (e: any) {
+      results.push(`⚠ Error during file operations: ${e.message}`);
+    }
+
+    return {
+      content: [{
+        type: "text",
+        text: `Conclusion Results for Task ${actualTaskId}:\n\n${results.join("\n")}`
+      }]
+    };
   }
 
   private extractCodeReviewFromActivities(activities: any[]): string | undefined {
@@ -2704,6 +2955,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     const sessionInfo = {
+      mcpVersion: "1.0.1-fixed",
       sessionMode: this.config.sessionMode,
       hasUserDataDir: !!this.config.userDataDir,
       hasCookiePath: !!this.config.cookiePath,
@@ -2914,13 +3166,15 @@ ${nextSteps.map((step, index) => `${index + 1}. ${step}`).join('\\n')}
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
 
-    console.error("Google Jules MCP Server running on stdio");
-    console.error("Configuration:", {
-      headless: this.config.headless,
-      timeout: this.config.timeout,
-      debug: this.config.debug,
-      dataPath: this.config.dataPath
-    });
+    if (this.config.debug) {
+      console.error("Google Jules MCP Server running on stdio");
+      console.error("Configuration:", {
+        headless: this.config.headless,
+        timeout: this.config.timeout,
+        debug: this.config.debug,
+        dataPath: this.config.dataPath
+      });
+    }
   }
 }
 
