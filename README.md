@@ -1,5 +1,7 @@
 # JCLAW (Jules Crustacean Logic & Automated Workflow)
 
+![JCLAW Logo](assets/logo.png)
+
 A Model Context Protocol (MCP) server for automating Google Jules - the AI coding assistant. JCLAW enables the "Lobster Pattern" of architecture, providing high-level reasoning (Brain) with autonomous remote execution (Muscles).
 
 ## Features
