@@ -1,5 +1,7 @@
 # 🤖 AI Agent Setup Guide: JCLAW (Jules Crustacean Logic & Automated Workflow)
 
+![JCLAW Logo](assets/logo.png)
+
 This guide is designed for an AI agent (like Antigravity, Claude, or Cursor) to quickly install, configure, and utilize this MCP server in a new environment.
 
 ## 🚀 Fast-Track Installation (CLI)
