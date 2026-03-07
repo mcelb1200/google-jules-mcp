@@ -1480,7 +1480,31 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     let results = [];
 
-    // Step 1: Push if requested
+    // Step 1: Deduplication Check (Prevent Redundant Tasks)
+    if (this.config.julesApiKey) {
+      try {
+        const existingSessions = await this.listSessionsViaApi();
+        const activeDuplicate = existingSessions.find(s => {
+          const repoMatch = s.sourceContext?.source?.toLowerCase() === `sources/github/${repository}`.toLowerCase();
+          const branchMatch = s.sourceContext?.githubRepoContext?.startingBranch === branch;
+          const isActive = ['QUEUED', 'CREATING', 'RUNNING', 'AWAITING_USER_FEEDBACK', 'AWAITING_PLAN_APPROVAL'].includes(s.state);
+          return repoMatch && branchMatch && isActive;
+        });
+
+        if (activeDuplicate) {
+          return {
+            content: [{
+              type: "text",
+              text: `⚠ Redundancy Canceled: A Jules session (${activeDuplicate.name.split('/').pop()}) is already ACTIVE for ${repository} on branch '${branch}' (State: ${activeDuplicate.state}).\n\nPlease use 'jules_get_task' or 'jules_check_feedback' to interact with the existing session.`
+            }]
+          };
+        }
+      } catch (e) {
+        console.error("Deduplication check failed, proceeding anyway:", e);
+      }
+    }
+
+    // Step 2: Push if requested
     if (pushFirst) {
       try {
         console.error(`Pushing branch ${branch} to origin...`);
@@ -1511,32 +1535,37 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       }
     }
 
-    // 3. Auto-detect convention-based instruction file (Brain/Muscles pattern)
+    // 3. Auto-detect from convention (Active or Backlog)
+    let instructionFileToMove: string | undefined;
     if (!finalPrompt && branch) {
       const branchesToTry = [
         branch,
-        branch.replace(/\//g, "-"), // Handle feature/foo as feature-foo
-        branch.split("/").pop() || branch // Handle feature/foo as foo
+        branch.replace(/\//g, "-"), // feature/foo -> feature-foo
+        branch.split("/").pop() || branch
       ];
 
-      const conventionPaths = branchesToTry.flatMap(b => [
-        `.jules/active/${b}.md`,
-        `.jules/active/${b}/task.md`,
-        `instructions.md`
-      ]);
+      const searchConfigs = [
+        { dir: ".jules/active", move: false },
+        { dir: ".jules/backlog", move: true },
+        { dir: ".", move: false }
+      ];
 
-      for (const p of conventionPaths) {
-        try {
-          const fullPath = path.resolve(process.cwd(), p);
-          const content = await fs.readFile(fullPath, "utf8");
-          if (content && content.trim().length > 0) {
-            finalPrompt = content;
-            strategy = `auto-detected: ${p}`;
-            break;
-          }
-        } catch (e) {
-          // Continue to next path
+      for (const config of searchConfigs) {
+        const potentialFiles = config.dir === "." ? ["instructions.md"] : branchesToTry.map(b => `${config.dir}/${b}.md`);
+
+        for (const p of potentialFiles) {
+          try {
+            const fullPath = path.resolve(process.cwd(), p);
+            const content = await fs.readFile(fullPath, "utf8");
+            if (content && content.trim().length > 0) {
+              finalPrompt = content;
+              strategy = `auto-detected in ${config.dir}: ${p}`;
+              if (config.move) instructionFileToMove = p;
+              break;
+            }
+          } catch (e) {}
         }
+        if (finalPrompt) break;
       }
     }
 
@@ -1560,6 +1589,22 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           marker
         });
         results.push(`✓ Jules task initiated via REST API.`);
+
+        // Relocate instruction file if it came from backlog
+        if (instructionFileToMove) {
+          try {
+            const backlogPath = path.resolve(process.cwd(), instructionFileToMove);
+            const activeDir = path.resolve(process.cwd(), ".jules/active");
+            const fileName = path.basename(instructionFileToMove);
+            const targetPath = path.join(activeDir, fileName);
+
+            await fs.mkdir(activeDir, { recursive: true });
+            await fs.rename(backlogPath, targetPath);
+            results.push(`➡ Relocated instruction: ${instructionFileToMove} -> .jules/active/${fileName}`);
+          } catch (e: any) {
+            results.push(`⚠ Failed to relocate instruction file: ${e.message}`);
+          }
+        }
       } else {
         // Fallback to CLI
         taskResult = await this.createTaskViaCli({
@@ -1665,6 +1710,22 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     return {
       content: [{ type: "text", text: `# Feedback Required\n\n${report}` }]
     };
+  }
+
+  private async listSessionsViaApi(): Promise<any[]> {
+    if (!this.config.julesApiKey) return [];
+    try {
+      const response = await axios.get(
+        "https://jules.googleapis.com/v1alpha/sessions",
+        {
+          headers: { "x-goog-api-key": this.config.julesApiKey }
+        }
+      );
+      return response.data.sessions || [];
+    } catch (e) {
+      console.error("Failed to list sessions via API:", e);
+      return [];
+    }
   }
 
   private async createTaskViaApi(args: any) {
