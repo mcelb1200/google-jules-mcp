@@ -455,21 +455,6 @@ export class GoogleJulesMCP {
               },
             },
           },
-          {
-            name: "jules_cli",
-            description: "Execute a command using the Jules CLI for token efficiency",
-            inputSchema: {
-              type: "object",
-              properties: {
-                args: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "Arguments to pass to the jules command",
-                },
-              },
-              required: ["args"],
-            },
-          },
         ],
       };
     });
@@ -496,6 +481,7 @@ export class GoogleJulesMCP {
           case 'jules_code_review':
             return await this.getCodeReview(args);
           case 'jules_delegate_task':
+            return await this.initiateDelegation(args);
           case 'jules_list_tasks':
             return await this.listTasks(args);
           case 'jules_analyze_code':
@@ -2240,10 +2226,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
   private async listTasksViaCli(args: any) {
     const { status = 'all' } = args;
-    let cliArgs = ["task", "list"];
-    if (status !== 'all') {
-      cliArgs.push("--status", status);
-    }
+    let cliArgs = ["remote", "list", "--session"];
 
     const output = await this.runJulesCli(cliArgs);
     return {
@@ -2704,6 +2687,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     const sessionInfo = {
+      mcpVersion: "1.0.1-fixed",
       sessionMode: this.config.sessionMode,
       hasUserDataDir: !!this.config.userDataDir,
       hasCookiePath: !!this.config.cookiePath,
@@ -2914,13 +2898,15 @@ ${nextSteps.map((step, index) => `${index + 1}. ${step}`).join('\\n')}
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
 
-    console.error("Google Jules MCP Server running on stdio");
-    console.error("Configuration:", {
-      headless: this.config.headless,
-      timeout: this.config.timeout,
-      debug: this.config.debug,
-      dataPath: this.config.dataPath
-    });
+    if (this.config.debug) {
+      console.error("Google Jules MCP Server running on stdio");
+      console.error("Configuration:", {
+        headless: this.config.headless,
+        timeout: this.config.timeout,
+        debug: this.config.debug,
+        dataPath: this.config.dataPath
+      });
+    }
   }
 }
 
