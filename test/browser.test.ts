@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { chromium } from 'playwright';
-import { GoogleJulesMCP } from '../src/index.js';
+import { JCLAW } from '../src/index.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -28,7 +28,7 @@ describe('Browser Tier Tests', () => {
     vi.stubEnv('SESSION_MODE', 'fresh');
 
     await fs.mkdir(tempDir, { recursive: true });
-    mcp = new GoogleJulesMCP();
+    mcp = new JCLAW();
 
     // Setup playwright mocks
     mockPage = {

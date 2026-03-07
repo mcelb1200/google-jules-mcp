@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import axios from 'axios';
-import { GoogleJulesMCP } from '../src/index.js';
+import { JCLAW } from '../src/index.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -19,7 +19,7 @@ describe('API Tier Tests', () => {
 
     await fs.mkdir(tempDir, { recursive: true });
 
-    mcp = new GoogleJulesMCP();
+    mcp = new JCLAW();
   });
 
   afterEach(async () => {

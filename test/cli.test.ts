@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as child_process from 'child_process';
-import { GoogleJulesMCP } from '../src/index.js';
+import { JCLAW } from '../src/index.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -28,7 +28,7 @@ describe('CLI Tier Tests', () => {
 
     await fs.mkdir(tempDir, { recursive: true });
 
-    mcp = new GoogleJulesMCP();
+    mcp = new JCLAW();
   });
 
   afterEach(async () => {
@@ -111,7 +111,7 @@ describe('CLI Tier Tests', () => {
             repository: 'test/repo'
         })
     );
-    expect(result.content[0].text).toContain('Delegation Initiation Results');
+    expect(result.content[0].text).toContain('Results [Delegation]:');
     expect(result.content[0].text).toContain('Pushed feature-branch');
   });
 });
