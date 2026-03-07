@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -8,7 +8,7 @@ import {
   ReadResourceRequestSchema,
   ErrorCode,
   McpError,
-} from "@modelcontextprotocol/sdk/types.js";
+} from '@modelcontextprotocol/sdk/types.js';
 import { chromium, Browser, Page } from 'playwright';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -105,7 +105,7 @@ export class JCLAW {
       // Jules API Key
       julesApiKey: process.env.JULES_API_KEY,
       // Jules CLI Path
-      julesCliPath: process.env.JULES_CLI_PATH || "jules"
+      julesCliPath: process.env.JULES_CLI_PATH || 'jules',
     };
 
     this.dataPath = this.config.dataPath;
@@ -181,7 +181,8 @@ export class JCLAW {
                 },
                 repository: {
                   type: 'string',
-                  description: 'Filter tasks by repository (owner/repo). Auto-detects if omitted in local git context.',
+                  description:
+                    'Filter tasks by repository (owner/repo). Auto-detects if omitted in local git context.',
                 },
                 limit: {
                   type: 'number',
@@ -238,7 +239,8 @@ export class JCLAW {
           },
           {
             name: 'jules_check_feedback',
-            description: 'Scans all active tasks for sessions in AWAITING_USER_FEEDBACK state and retrieves questions from Jules.',
+            description:
+              'Scans all active tasks for sessions in AWAITING_USER_FEEDBACK state and retrieves questions from Jules.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -246,12 +248,13 @@ export class JCLAW {
                   type: 'string',
                   description: 'Optional filter by repository (owner/repo).',
                 },
-              }
+              },
             },
           },
           {
             name: 'jules_delegate_task',
-            description: 'The most efficient way to initiate delegatings. Triggers a Jules task on a remote branch after optionally pushing local changes. Jules will specifically look for instructions marked in the code.',
+            description:
+              'The most efficient way to initiate delegatings. Triggers a Jules task on a remote branch after optionally pushing local changes. Jules will specifically look for instructions marked in the code.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -265,7 +268,8 @@ export class JCLAW {
                 },
                 taskId: {
                   type: 'string',
-                  description: 'Unique identifier for this sub-task (e.g., feature-part-1). Allows concurrent tasks on the same branch.',
+                  description:
+                    'Unique identifier for this sub-task (e.g., feature-part-1). Allows concurrent tasks on the same branch.',
                 },
                 marker: {
                   type: 'string',
@@ -273,26 +277,31 @@ export class JCLAW {
                 },
                 pushFirst: {
                   type: 'boolean',
-                  description: 'Whether to push the current branch to origin before initiating task (default: true)',
+                  description:
+                    'Whether to push the current branch to origin before initiating task (default: true)',
                 },
                 instruction: {
                   type: 'string',
-                  description: 'Full instruction text for Jules (overrides markers and instructionFile).',
+                  description:
+                    'Full instruction text for Jules (overrides markers and instructionFile).',
                 },
                 instructionFile: {
                   type: 'string',
-                  description: 'Path to a markdown file containing detailed instructions (e.g., .jules/active/task.md).',
+                  description:
+                    'Path to a markdown file containing detailed instructions (e.g., .jules/active/task.md).',
                 },
                 respectIgnoreFiles: {
                   type: 'boolean',
-                  description: 'Whether to respect .jclaw-ignore, .gitignore, and standard ignore patterns.',
+                  description:
+                    'Whether to respect .jclaw-ignore, .gitignore, and standard ignore patterns.',
                 },
-              }
+              },
             },
           },
           {
             name: 'jules_audit_report',
-            description: 'Generates a formal audit report for a Jules session, consolidating intent, activity logs, and code outcomes for compliance and verification.',
+            description:
+              'Generates a formal audit report for a Jules session, consolidating intent, activity logs, and code outcomes for compliance and verification.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -306,7 +315,8 @@ export class JCLAW {
           },
           {
             name: 'jules_conclude_task',
-            description: 'Finalizes a Jules session by archiving instructions. Handles completed and incomplete transitions.',
+            description:
+              'Finalizes a Jules session by archiving instructions. Handles completed and incomplete transitions.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -321,11 +331,13 @@ export class JCLAW {
                 },
                 remainingWork: {
                   type: 'string',
-                  description: 'If incomplete, describe the remaining work to be re-issued to the backlog.',
+                  description:
+                    'If incomplete, describe the remaining work to be re-issued to the backlog.',
                 },
                 residualTaskId: {
                   type: 'string',
-                  description: 'Optional name for the re-issued backlog file (defaults to [taskId]-residual).',
+                  description:
+                    'Optional name for the re-issued backlog file (defaults to [taskId]-residual).',
                 },
               },
               required: ['taskId', 'status'],
@@ -333,7 +345,8 @@ export class JCLAW {
           },
           {
             name: 'jules_code_review',
-            description: 'Extracts the most recent code review or reasoning analysis from a Jules session. Provides insights into Jules decisions and verification ratings.',
+            description:
+              'Extracts the most recent code review or reasoning analysis from a Jules session. Provides insights into Jules decisions and verification ratings.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -362,7 +375,8 @@ export class JCLAW {
                 },
                 returnPatch: {
                   type: 'boolean',
-                  description: 'Whether to return the raw git patch (useful for salvaging failed tasks)',
+                  description:
+                    'Whether to return the raw git patch (useful for salvaging failed tasks)',
                 },
               },
               required: ['taskId'],
@@ -400,14 +414,16 @@ export class JCLAW {
               properties: {
                 dummy: {
                   type: 'string',
-                  description: 'Dummy parameter to prevent empty properties object for Gemini 400 error'
-                }
+                  description:
+                    'Dummy parameter to prevent empty properties object for Gemini 400 error',
+                },
               },
             },
           },
           {
             name: 'jules_setup_wizard',
-            description: 'Interactive session setup wizard for automated Google authentication configuration',
+            description:
+              'Interactive session setup wizard for automated Google authentication configuration',
             inputSchema: {
               type: 'object',
               properties: {
@@ -422,18 +438,18 @@ export class JCLAW {
                     priority: {
                       type: 'string',
                       enum: ['ease-of-use', 'reliability', 'portability', 'performance'],
-                      description: 'User priority for session management'
+                      description: 'User priority for session management',
                     },
                     hasChrome: {
                       type: 'boolean',
-                      description: 'Whether user has local Chrome browser access'
+                      description: 'Whether user has local Chrome browser access',
                     },
                     cloudDeployment: {
                       type: 'boolean',
-                      description: 'Whether deploying to cloud platforms'
-                    }
-                  }
-                }
+                      description: 'Whether deploying to cloud platforms',
+                    },
+                  },
+                },
               },
             },
           },
@@ -471,18 +487,18 @@ export class JCLAW {
             },
           },
           {
-            name: "jules_cli",
-            description: "Execute a command using the Jules CLI for token efficiency",
+            name: 'jules_cli',
+            description: 'Execute a command using the Jules CLI for token efficiency',
             inputSchema: {
-              type: "object",
+              type: 'object',
               properties: {
                 args: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "Arguments to pass to the jules command",
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Arguments to pass to the jules command',
                 },
               },
-              required: ["args"],
+              required: ['args'],
             },
           },
           // === DEBUGGING & UTILITIES ===
@@ -538,12 +554,13 @@ export class JCLAW {
             return await this.analyzeCode(args);
           case 'jules_bulk_create_tasks':
             return await this.bulkCreateTasks(args);
-          case "jules_cli":
+          case 'jules_cli': {
             const cliArgs = (args as any).args as string[];
             const output = await this.runJulesCli(cliArgs);
             return {
-              content: [{ type: "text", text: output }]
+              content: [{ type: 'text', text: output }],
             };
+          }
           case 'jules_screenshot':
             return await this.takeScreenshot(args);
           case 'jules_get_cookies':
@@ -572,51 +589,51 @@ export class JCLAW {
             uri: 'jules://schemas/task',
             name: 'Task Schema',
             description: 'Complete task model with all available attributes',
-            mimeType: 'application/json'
+            mimeType: 'application/json',
           },
           {
             uri: 'jules://current/active-tasks',
             name: 'Active Tasks',
             description: 'Live list of active tasks in Jules',
-            mimeType: 'application/json'
+            mimeType: 'application/json',
           },
           {
             uri: 'jules://templates/common-tasks',
             name: 'Common Task Templates',
             description: 'Template examples for common development tasks',
-            mimeType: 'application/json'
+            mimeType: 'application/json',
           },
           {
             uri: 'jules://prompts/session-setup',
             name: 'Session Setup Automation',
             description: 'Step-by-step prompts for automated Google authentication setup',
-            mimeType: 'text/plain'
+            mimeType: 'text/plain',
           },
           {
             uri: 'jules://prompts/cookie-extraction',
             name: 'Cookie Extraction Guide',
             description: 'Automated prompts for extracting Google authentication cookies',
-            mimeType: 'text/plain'
+            mimeType: 'text/plain',
           },
           {
             uri: 'jules://prompts/browserbase-setup',
             name: 'Browserbase Configuration',
             description: 'Automated Browserbase setup for remote browser sessions',
-            mimeType: 'text/plain'
+            mimeType: 'text/plain',
           },
           {
             uri: 'jules://guides/session-modes',
             name: 'Session Mode Selection Guide',
             description: 'Intelligent guide for choosing the optimal session management mode',
-            mimeType: 'text/plain'
+            mimeType: 'text/plain',
           },
           {
             uri: 'jules://troubleshooting/authentication',
             name: 'Authentication Troubleshooting',
             description: 'Automated diagnostics and fixes for authentication issues',
-            mimeType: 'text/plain'
+            mimeType: 'text/plain',
           },
-        ]
+        ],
       };
     });
 
@@ -626,56 +643,79 @@ export class JCLAW {
       switch (uri) {
         case 'jules://schemas/task':
           return {
-            contents: [{
-              uri,
-              mimeType: 'application/json',
-              text: JSON.stringify({
-                id: 'string',
-                title: 'string',
-                description: 'string',
-                repository: 'string (owner/repo-name)',
-                branch: 'string',
-                status: 'pending | in_progress | completed | paused',
-                createdAt: 'ISO timestamp',
-                updatedAt: 'ISO timestamp',
-                url: 'Jules task URL',
-                chatHistory: 'array of chat messages',
-                sourceFiles: 'array of modified files'
-              }, null, 2)
-            }]
+            contents: [
+              {
+                uri,
+                mimeType: 'application/json',
+                text: JSON.stringify(
+                  {
+                    id: 'string',
+                    title: 'string',
+                    description: 'string',
+                    repository: 'string (owner/repo-name)',
+                    branch: 'string',
+                    status: 'pending | in_progress | completed | paused',
+                    createdAt: 'ISO timestamp',
+                    updatedAt: 'ISO timestamp',
+                    url: 'Jules task URL',
+                    chatHistory: 'array of chat messages',
+                    sourceFiles: 'array of modified files',
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
           };
         case 'jules://current/active-tasks':
           const activeTasks = await this.getActiveTasks();
           return {
-            contents: [{
-              uri,
-              mimeType: 'application/json',
-              text: JSON.stringify(activeTasks, null, 2)
-            }]
+            contents: [
+              {
+                uri,
+                mimeType: 'application/json',
+                text: JSON.stringify(activeTasks, null, 2),
+              },
+            ],
           };
         case 'jules://templates/common-tasks':
           return {
-            contents: [{
-              uri,
-              mimeType: 'application/json',
-              text: JSON.stringify({
-                'bug-fix': 'Fix the [specific issue] in [filename]. The problem is [description].',
-                'feature-add': 'Add [feature name] functionality to [location]. Requirements: [list requirements].',
-                'refactor': 'Refactor [component/function] to improve [performance/readability/maintainability].',
-                'test-add': 'Add comprehensive tests for [component/function] covering [test cases].',
-                'documentation': 'Update documentation for [component] to include [new features/changes].',
-                'dependency-update': 'Update [dependency name] to version [version] and fix any breaking changes.',
-                'security-fix': 'Fix security vulnerability in [location]: [description of vulnerability].',
-                'performance': 'Optimize [component/function] performance by [specific optimization approach].'
-              }, null, 2)
-            }]
+            contents: [
+              {
+                uri,
+                mimeType: 'application/json',
+                text: JSON.stringify(
+                  {
+                    'bug-fix':
+                      'Fix the [specific issue] in [filename]. The problem is [description].',
+                    'feature-add':
+                      'Add [feature name] functionality to [location]. Requirements: [list requirements].',
+                    refactor:
+                      'Refactor [component/function] to improve [performance/readability/maintainability].',
+                    'test-add':
+                      'Add comprehensive tests for [component/function] covering [test cases].',
+                    documentation:
+                      'Update documentation for [component] to include [new features/changes].',
+                    'dependency-update':
+                      'Update [dependency name] to version [version] and fix any breaking changes.',
+                    'security-fix':
+                      'Fix security vulnerability in [location]: [description of vulnerability].',
+                    performance:
+                      'Optimize [component/function] performance by [specific optimization approach].',
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
           };
         case 'jules://prompts/session-setup':
           return {
-            contents: [{
-              uri,
-              mimeType: 'text/plain',
-              text: `# Jules MCP Session Setup Automation
+            contents: [
+              {
+                uri,
+                mimeType: 'text/plain',
+                text: `# Jules MCP Session Setup Automation
 
 ## Agent Instructions for Automated Google Authentication Setup
 
@@ -734,15 +774,17 @@ Always end by:
 - \`jules_set_cookies\` - Test cookie authentication
 - \`jules_screenshot\` - Debug authentication issues
 
-Remember: Be proactive and guide the user through each step. Don't just provide information - actively help configure and test the setup.`
-            }]
+Remember: Be proactive and guide the user through each step. Don't just provide information - actively help configure and test the setup.`,
+              },
+            ],
           };
         case 'jules://prompts/cookie-extraction':
           return {
-            contents: [{
-              uri,
-              mimeType: 'text/plain',
-              text: `# Automated Google Authentication Cookie Extraction
+            contents: [
+              {
+                uri,
+                mimeType: 'text/plain',
+                text: `# Automated Google Authentication Cookie Extraction
 
 ## Agent Instructions for Cookie-Based Authentication
 
@@ -804,15 +846,17 @@ If the user has the MCP running with basic access:
 If possible, automate this by:
 1. Taking a screenshot of the current Jules page
 2. Using jules_get_cookies if browser access is available
-3. Providing formatted output ready for environment variables`
-            }]
+3. Providing formatted output ready for environment variables`,
+              },
+            ],
           };
         case 'jules://prompts/browserbase-setup':
           return {
-            contents: [{
-              uri,
-              mimeType: 'text/plain',
-              text: `# Automated Browserbase Setup for Remote Jules MCP
+            contents: [
+              {
+                uri,
+                mimeType: 'text/plain',
+                text: `# Automated Browserbase Setup for Remote Jules MCP
 
 ## Agent Instructions for Browserbase Configuration
 
@@ -888,15 +932,17 @@ For Smithery users:
 3. The MCP will automatically handle remote browser management
 4. Access from any Claude Code instance globally
 
-This approach completely eliminates local browser dependency!`
-            }]
+This approach completely eliminates local browser dependency!`,
+              },
+            ],
           };
         case 'jules://guides/session-modes':
           return {
-            contents: [{
-              uri,
-              mimeType: 'text/plain',
-              text: `# Intelligent Session Mode Selection Guide
+            contents: [
+              {
+                uri,
+                mimeType: 'text/plain',
+                text: `# Intelligent Session Mode Selection Guide
 
 ## Agent Decision Tree for Optimal Session Configuration
 
@@ -991,15 +1037,17 @@ After configuration, always verify:
 - Ask contextual questions to understand their workflow
 - Provide specific commands they can copy-paste
 - Test configuration immediately after setup
-- Offer fallback options if primary choice fails`
-            }]
+- Offer fallback options if primary choice fails`,
+              },
+            ],
           };
         case 'jules://troubleshooting/authentication':
           return {
-            contents: [{
-              uri,
-              mimeType: 'text/plain',
-              text: `# Automated Authentication Troubleshooting
+            contents: [
+              {
+                uri,
+                mimeType: 'text/plain',
+                text: `# Automated Authentication Troubleshooting
 
 ## Agent Diagnostic and Repair Instructions
 
@@ -1123,8 +1171,9 @@ If basic troubleshooting fails:
 - Set up automated cookie refresh if using cookie mode
 - Use Browserbase for production deployments to avoid local issues
 
-Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to understand the current state before attempting fixes.`
-            }]
+Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to understand the current state before attempting fixes.`,
+              },
+            ],
           };
         default:
           throw new McpError(ErrorCode.InvalidRequest, `Unknown resource: ${uri}`);
@@ -1153,16 +1202,12 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     try {
-      const response = await axios.post(
-        `https://api.browserbase.com/v1/sessions`,
-        sessionData,
-        {
-          headers: {
-            'x-bb-api-key': this.config.browserbaseApiKey,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await axios.post(`https://api.browserbase.com/v1/sessions`, sessionData, {
+        headers: {
+          'x-bb-api-key': this.config.browserbaseApiKey,
+          'Content-Type': 'application/json',
+        },
+      });
 
       return response.data;
     } catch (error: any) {
@@ -1170,16 +1215,12 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       if (contextId && error.response?.status === 400) {
         console.error('Context parameter failed, trying without context...');
         delete sessionData.contextId;
-        const response = await axios.post(
-          `https://api.browserbase.com/v1/sessions`,
-          sessionData,
-          {
-            headers: {
-              'x-bb-api-key': this.config.browserbaseApiKey,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        const response = await axios.post(`https://api.browserbase.com/v1/sessions`, sessionData, {
+          headers: {
+            'x-bb-api-key': this.config.browserbaseApiKey,
+            'Content-Type': 'application/json',
+          },
+        });
         return response.data;
       }
       throw error;
@@ -1199,8 +1240,10 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   // Cookie management - Fixed parsing
-  private parseCookiesFromString(cookieString: string): Array<{name: string, value: string, domain: string}> {
-    const cookies: Array<{name: string, value: string, domain: string}> = [];
+  private parseCookiesFromString(
+    cookieString: string
+  ): Array<{ name: string; value: string; domain: string }> {
+    const cookies: Array<{ name: string; value: string; domain: string }> = [];
 
     // Split by semicolon and process each cookie
     const parts = cookieString.split(';');
@@ -1223,7 +1266,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           cookies.push({
             name,
             value,
-            domain: '.google.com'
+            domain: '.google.com',
           });
         }
       }
@@ -1233,7 +1276,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     return cookies;
   }
 
-  private async loadCookiesFromFile(cookiePath: string): Promise<Array<{name: string, value: string, domain: string}>> {
+  private async loadCookiesFromFile(
+    cookiePath: string
+  ): Promise<Array<{ name: string; value: string; domain: string }>> {
     try {
       const cookieData = await fs.readFile(cookiePath, 'utf-8');
       return JSON.parse(cookieData);
@@ -1243,7 +1288,10 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
   }
 
-  private async saveCookiesToFile(cookies: Array<{name: string, value: string, domain: string}>, cookiePath: string): Promise<void> {
+  private async saveCookiesToFile(
+    cookies: Array<{ name: string; value: string; domain: string }>,
+    cookiePath: string
+  ): Promise<void> {
     try {
       await fs.mkdir(path.dirname(cookiePath), { recursive: true });
       await fs.writeFile(cookiePath, JSON.stringify(cookies, null, 2));
@@ -1268,7 +1316,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           // For persistent contexts, we'll handle this differently in getPage
           this.browser = await chromium.launch({
             headless: this.config.headless,
-            timeout: this.config.timeout
+            timeout: this.config.timeout,
           });
           break;
 
@@ -1276,7 +1324,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           // For persistent contexts, we'll handle this differently in getPage
           this.browser = await chromium.launch({
             headless: this.config.headless,
-            timeout: this.config.timeout
+            timeout: this.config.timeout,
           });
           break;
 
@@ -1285,7 +1333,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         default:
           this.browser = await chromium.launch({
             headless: this.config.headless,
-            timeout: this.config.timeout
+            timeout: this.config.timeout,
           });
           break;
       }
@@ -1304,7 +1352,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         const pages = context.pages();
         this.page = pages.length > 0 ? pages[0] : await context.newPage();
       } else if (this.config.sessionMode === 'persistent') {
-        const persistentDir = this.config.userDataDir || path.join(os.homedir(), '.jclaw', 'browser-data');
+        const persistentDir =
+          this.config.userDataDir || path.join(os.homedir(), '.jclaw', 'browser-data');
         const context = await chromium.launchPersistentContext(persistentDir, {
           headless: this.config.headless,
           timeout: this.config.timeout,
@@ -1339,7 +1388,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   private async loadSessionCookies(): Promise<void> {
     if (!this.page) return;
 
-    let cookies: Array<{name: string, value: string, domain: string}> = [];
+    let cookies: Array<{ name: string; value: string; domain: string }> = [];
 
     // Load cookies from string
     if (this.config.googleAuthCookies) {
@@ -1354,12 +1403,14 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     // Set cookies if any were loaded
     if (cookies.length > 0) {
-      await this.page.context().addCookies(cookies.map(cookie => ({
-        name: cookie.name,
-        value: cookie.value,
-        domain: cookie.domain,
-        path: '/',
-      })));
+      await this.page.context().addCookies(
+        cookies.map((cookie) => ({
+          name: cookie.name,
+          value: cookie.value,
+          domain: cookie.domain,
+          path: '/',
+        }))
+      );
       console.error(`Set ${cookies.length} cookies in browser context`);
     }
   }
@@ -1369,10 +1420,10 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     try {
       const cookies = await this.page.context().cookies();
-      const simplifiedCookies = cookies.map(cookie => ({
+      const simplifiedCookies = cookies.map((cookie) => ({
         name: cookie.name,
         value: cookie.value,
-        domain: cookie.domain
+        domain: cookie.domain,
       }));
       await this.saveCookiesToFile(simplifiedCookies, this.config.cookiePath);
       console.error(`Saved ${cookies.length} cookies to file`);
@@ -1409,14 +1460,14 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async resolveJulesCliPath(): Promise<string> {
-    const cliPath = this.config.julesCliPath || "jules";
+    const cliPath = this.config.julesCliPath || 'jules';
     const execPromise = promisify(exec);
 
     // 1. Try "jules" directly (check PATH)
     try {
       const checkCmd = os.platform() === 'win32' ? 'where jules' : 'which jules';
       await execPromise(checkCmd);
-      return "jules";
+      return 'jules';
     } catch (e) {
       // Not in path
     }
@@ -1424,7 +1475,10 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     // 2. Try configured path
     if (this.config.julesCliPath) {
       try {
-        const checkCmd = os.platform() === 'win32' ? `where "${this.config.julesCliPath}"` : `ls "${this.config.julesCliPath}"`;
+        const checkCmd =
+          os.platform() === 'win32'
+            ? `where "${this.config.julesCliPath}"`
+            : `ls "${this.config.julesCliPath}"`;
         await execPromise(checkCmd);
         return this.config.julesCliPath;
       } catch (e) {
@@ -1443,7 +1497,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       }
     }
 
-    return "jules"; // Ultimate fallback
+    return 'jules'; // Ultimate fallback
   }
 
   private async runJulesCli(args: string[]): Promise<string> {
@@ -1451,7 +1505,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const cliPath = await this.resolveJulesCliPath();
 
     // Safely wrap and escape arguments for the shell
-    const escapedArgs = args.map(arg => {
+    const escapedArgs = args.map((arg) => {
       // For Windows, wrap in double quotes and escape internal double quotes
       if (os.platform() === 'win32') {
         const escaped = arg.replace(/"/g, '""');
@@ -1463,7 +1517,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       }
     });
 
-    const command = `${cliPath} ${escapedArgs.join(" ")} < /dev/null`;
+    const command = `${cliPath} ${escapedArgs.join(' ')} < /dev/null`;
 
     try {
       console.error(`Executing Jules CLI: ${command}`);
@@ -1479,7 +1533,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
   private async runGitCommand(args: string[]): Promise<string> {
     const execPromise = promisify(exec);
-    const command = `git ${args.join(" ")}`;
+    const command = `git ${args.join(' ')}`;
     try {
       console.error(`Executing Git command: ${command}`);
       const { stdout } = await execPromise(command);
@@ -1491,7 +1545,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
   private async runGhCommand(args: string[]): Promise<string> {
     const execPromise = promisify(exec);
-    const command = `gh ${args.join(" ")}`;
+    const command = `gh ${args.join(' ')}`;
     try {
       console.error(`Executing GH command: ${command}`);
       const { stdout } = await execPromise(command);
@@ -1501,15 +1555,19 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
   }
 
-  private async verifyRemoteInstructionFile(repository: string, branch: string, filePath: string): Promise<boolean> {
+  private async verifyRemoteInstructionFile(
+    repository: string,
+    branch: string,
+    filePath: string
+  ): Promise<boolean> {
     try {
       console.error(`Verifying remote existence: ${repository}/${branch}/${filePath}`);
       // Use gh api to check contents
       const result = await this.runGhCommand([
-        "api",
+        'api',
         `/repos/${repository}/contents/${filePath}?ref=${branch}`,
-        "--jq",
-        ".name"
+        '--jq',
+        '.name',
       ]);
       return !!result;
     } catch (e) {
@@ -1520,13 +1578,13 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   private async detectGitContext() {
     try {
       // Get remote URL to extract owner/repo
-      const remoteUrl = await this.runGitCommand(["remote", "get-url", "origin"]);
+      const remoteUrl = await this.runGitCommand(['remote', 'get-url', 'origin']);
       // Matches both ssh and https formats
       const repoMatch = remoteUrl.match(/[:/]([^/]+\/[^/.]+)(\.git)?$/);
       const repository = repoMatch ? repoMatch[1] : undefined;
 
       // Get current branch
-      const branch = await this.runGitCommand(["rev-parse", "--abbrev-ref", "HEAD"]);
+      const branch = await this.runGitCommand(['rev-parse', '--abbrev-ref', 'HEAD']);
 
       return { repository, branch };
     } catch (e) {
@@ -1535,7 +1593,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async initiateDelegation(args: any) {
-    let { repository, branch, taskId, marker = "@jules", pushFirst = true, instruction, instructionFile } = args;
+    let {
+      repository,
+      branch,
+      taskId,
+      marker = '@jules',
+      pushFirst = true,
+      instruction,
+      instructionFile,
+    } = args;
 
     // Auto-detect context if missing
     if (!repository || !branch) {
@@ -1545,35 +1611,48 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     if (!repository || !branch) {
-      throw new Error("Repository and branch must be provided or auto-detectable via local Git context.");
+      throw new Error(
+        'Repository and branch must be provided or auto-detectable via local Git context.'
+      );
     }
 
-    let results = [];
-    let activeTaskId = taskId || branch || "default";
+    const results = [];
+    let activeTaskId = taskId || branch || 'default';
 
     // Step 1: Deduplication Check (Prevent Redundant Tasks)
     if (this.config.julesApiKey) {
       try {
         const existingSessions = await this.listSessionsViaApi();
         // Match by repo, branch AND taskId (embedded in title or prompt)
-        const activeDuplicate = existingSessions.find(s => {
-          const repoMatch = s.sourceContext?.source?.toLowerCase() === `sources/github/${repository}`.toLowerCase();
+        const activeDuplicate = existingSessions.find((s) => {
+          const repoMatch =
+            s.sourceContext?.source?.toLowerCase() === `sources/github/${repository}`.toLowerCase();
           const branchMatch = s.sourceContext?.githubRepoContext?.startingBranch === branch;
-          const taskIdMatch = taskId ? (s.title?.includes(`[${taskId}]`) || s.prompt?.includes(`[${taskId}]`)) : true;
-          const isActive = ['QUEUED', 'CREATING', 'RUNNING', 'AWAITING_USER_FEEDBACK', 'AWAITING_PLAN_APPROVAL'].includes(s.state);
+          const taskIdMatch = taskId
+            ? s.title?.includes(`[${taskId}]`) || s.prompt?.includes(`[${taskId}]`)
+            : true;
+          const isActive = [
+            'QUEUED',
+            'CREATING',
+            'RUNNING',
+            'AWAITING_USER_FEEDBACK',
+            'AWAITING_PLAN_APPROVAL',
+          ].includes(s.state);
           return repoMatch && branchMatch && taskIdMatch && isActive;
         });
 
         if (activeDuplicate) {
           return {
-            content: [{
-              type: "text",
-              text: `⚠ Concurrency Intercept: A Jules session (${activeDuplicate.name.split('/').pop()}) for task '${activeTaskId}' is already ACTIVE on branch '${branch}'.\n\nTo run concurrent sessions, provide a unique 'taskId' to the tool.`
-            }]
+            content: [
+              {
+                type: 'text',
+                text: `⚠ Concurrency Intercept: A Jules session (${activeDuplicate.name.split('/').pop()}) for task '${activeTaskId}' is already ACTIVE on branch '${branch}'.\n\nTo run concurrent sessions, provide a unique 'taskId' to the tool.`,
+              },
+            ],
           };
         }
       } catch (e) {
-        console.error("Deduplication check failed, proceeding anyway:", e);
+        console.error('Deduplication check failed, proceeding anyway:', e);
       }
     }
 
@@ -1581,7 +1660,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     if (pushFirst) {
       try {
         console.error(`Pushing branch ${branch} to origin...`);
-        await this.runGitCommand(["push", "origin", branch]);
+        await this.runGitCommand(['push', 'origin', branch]);
         results.push(`✓ Pushed ${branch} to origin successfully.`);
       } catch (error: any) {
         results.push(`⚠ Push might have failed or skip: ${error.message}`);
@@ -1590,36 +1669,36 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     // Step 2: Determine Prompt (Tiered Strategy)
     let finalPrompt = instruction;
-    let strategy = "marker-based";
+    let strategy = 'marker-based';
 
     // 1. Check for explicit raw instruction
     if (finalPrompt) {
-      strategy = "explicit instruction text";
+      strategy = 'explicit instruction text';
     }
 
     // 2. Check for explicit instruction file
     if (!finalPrompt && instructionFile) {
       try {
         const fullPath = path.resolve(process.cwd(), instructionFile);
-        finalPrompt = await fs.readFile(fullPath, "utf8");
+        finalPrompt = await fs.readFile(fullPath, 'utf8');
         strategy = `instruction file: ${instructionFile}`;
       } catch (error: any) {
-        results.push(`⚠ Could not read explicit instruction file ${instructionFile}: ${error.message}`);
+        results.push(
+          `⚠ Could not read explicit instruction file ${instructionFile}: ${error.message}`
+        );
       }
     }
 
     // 3. Auto-detect from convention (Active or Backlog)
     let instructionFileToMove: string | undefined;
     if (!finalPrompt && (taskId || branch)) {
-      const searchTerms = taskId ? [taskId] : [
-        branch!,
-        branch!.replace(/\//g, "-"),
-        branch!.split("/").pop() || "task"
-      ];
+      const searchTerms = taskId
+        ? [taskId]
+        : [branch!, branch!.replace(/\//g, '-'), branch!.split('/').pop() || 'task'];
 
       const searchConfigs = [
-        { dir: ".jules/active", move: false },
-        { dir: ".jules/backlog", move: true }
+        { dir: '.jules/active', move: false },
+        { dir: '.jules/backlog', move: true },
       ];
 
       for (const config of searchConfigs) {
@@ -1627,7 +1706,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           const p = `${config.dir}/${term}.md`;
           try {
             const fullPath = path.resolve(process.cwd(), p);
-            const content = await fs.readFile(fullPath, "utf8");
+            const content = await fs.readFile(fullPath, 'utf8');
             if (content && content.trim().length > 0) {
               finalPrompt = content;
               if (!taskId) activeTaskId = term;
@@ -1643,9 +1722,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       // Fallback for instructions.md
       if (!finalPrompt) {
         try {
-          const fullPath = path.resolve(process.cwd(), "instructions.md");
-          finalPrompt = await fs.readFile(fullPath, "utf8");
-          strategy = "fallback to instructions.md";
+          const fullPath = path.resolve(process.cwd(), 'instructions.md');
+          finalPrompt = await fs.readFile(fullPath, 'utf8');
+          strategy = 'fallback to instructions.md';
         } catch (e) {}
       }
     }
@@ -1659,7 +1738,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     results.push(`ℹ Delegation Strategy: ${strategy}`);
 
     // Step 2.5: Remote Consistency Verification (Brain requirement)
-    if (instructionFileToMove || (strategy.includes("instruction file"))) {
+    if (instructionFileToMove || strategy.includes('instruction file')) {
       const remotePath = instructionFileToMove || instructionFile;
       if (remotePath) {
         results.push(`⏳ Verifying remote consistency for ${remotePath}...`);
@@ -1667,11 +1746,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         if (isRemote) {
           results.push(`✓ Remote consistency confirmed via GH API.`);
         } else {
-          results.push(`⚠ WARNING: Instruction file ${remotePath} NOT found on remote branch '${branch}'. Jules may fail to initiate.`);
+          results.push(
+            `⚠ WARNING: Instruction file ${remotePath} NOT found on remote branch '${branch}'. Jules may fail to initiate.`
+          );
           // Try a last-ditch push if we haven't already
           if (!pushFirst) {
-             results.push(`ℹ Attempting last-ditch push...`);
-             try { await this.runGitCommand(["push", "origin", branch]); } catch (e) {}
+            results.push(`ℹ Attempting last-ditch push...`);
+            try {
+              await this.runGitCommand(['push', 'origin', branch]);
+            } catch (e) {}
           }
         }
       }
@@ -1679,13 +1762,16 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     // Step 3: Optional Ignore Handling (JCLAW Prioritization)
     let jclawIgnore: string[] = [];
-    let standardIgnore: string[] = [];
+    const standardIgnore: string[] = [];
 
     if (args.respectIgnoreFiles !== false) {
       // Primary Shield
       try {
-        const content = await fs.readFile(path.resolve(process.cwd(), ".jclaw-ignore"), "utf8");
-        const lines = content.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+        const content = await fs.readFile(path.resolve(process.cwd(), '.jclaw-ignore'), 'utf8');
+        const lines = content
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l && !l.startsWith('#'));
         if (lines.length > 0) {
           jclawIgnore = lines;
           results.push(`✓ Including JCLAW Primary Shield (.jclaw-ignore)`);
@@ -1693,14 +1779,17 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       } catch (e) {}
 
       // Secondary Shields
-      const secondaryFiles = [".gitignore", ".cursorignore", ".dockerignore"];
+      const secondaryFiles = ['.gitignore', '.cursorignore', '.dockerignore'];
       for (const f of secondaryFiles) {
         try {
-          const content = await fs.readFile(path.resolve(process.cwd(), f), "utf8");
-          const lines = content.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+          const content = await fs.readFile(path.resolve(process.cwd(), f), 'utf8');
+          const lines = content
+            .split('\n')
+            .map((l) => l.trim())
+            .filter((l) => l && !l.startsWith('#'));
           if (lines.length > 0) {
             // Add lines not already in jclawIgnore
-            const newLines = lines.filter(l => !jclawIgnore.includes(l));
+            const newLines = lines.filter((l) => !jclawIgnore.includes(l));
             if (newLines.length > 0) {
               standardIgnore.push(...newLines);
               results.push(`✓ Including secondary rules from ${f}`);
@@ -1714,11 +1803,13 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const allIgnore = [...jclawIgnore, ...standardIgnore];
 
     // Step 4: Final Prompt Prep (Inject Task Identifier and Ignores)
-    let ignoreInstruction = allIgnore.length > 0
-      ? `\n\n### 🛡️ Restricted Files (DO NOT MODIFY):\n${allIgnore.map(p => `- ${p}`).join("\n")}`
-      : "";
+    const ignoreInstruction =
+      allIgnore.length > 0
+        ? `\n\n### 🛡️ Restricted Files (DO NOT MODIFY):\n${allIgnore.map((p) => `- ${p}`).join('\n')}`
+        : '';
 
-    const decoratedPrompt = (taskId ? `Task: [${taskId}]\n\n${finalPrompt}` : finalPrompt) + ignoreInstruction;
+    const decoratedPrompt =
+      (taskId ? `Task: [${taskId}]\n\n${finalPrompt}` : finalPrompt) + ignoreInstruction;
     const taskTitle = taskId ? `${activeTaskId} [${taskId}]` : activeTaskId;
 
     try {
@@ -1730,8 +1821,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           title: taskTitle,
           repository,
           branch,
-          type: "delegated",
-          marker
+          type: 'delegated',
+          marker,
         });
         results.push(`✓ Jules task initiated via REST API.`);
 
@@ -1739,13 +1830,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         if (instructionFileToMove) {
           try {
             const backlogPath = path.resolve(process.cwd(), instructionFileToMove);
-            const activeDir = path.resolve(process.cwd(), ".jules/active");
+            const activeDir = path.resolve(process.cwd(), '.jules/active');
             const fileName = path.basename(instructionFileToMove);
             const targetPath = path.join(activeDir, fileName);
 
             await fs.mkdir(activeDir, { recursive: true });
             await fs.rename(backlogPath, targetPath);
-            results.push(`➡ Relocated instruction: ${instructionFileToMove} -> .jules/active/${fileName}`);
+            results.push(
+              `➡ Relocated instruction: ${instructionFileToMove} -> .jules/active/${fileName}`
+            );
           } catch (e: any) {
             results.push(`⚠ Failed to relocate instruction file: ${e.message}`);
           }
@@ -1755,8 +1848,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         taskResult = await this.createTaskViaCli({
           description: finalPrompt,
           repository,
-          type: "delegated",
-          marker
+          type: 'delegated',
+          marker,
         });
         results.push(`✓ Jules task initiated via CLI (Note: Large prompts may be truncated).`);
       }
@@ -1764,10 +1857,10 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       return {
         content: [
           {
-            type: "text",
-            text: `Results [Delegation]:\n${results.join("\n")}\n\n--- 🦞 JCLAW Conclusion ---\nThe pincer has snapped (snap!) shut on the target branch. Jules has been unleashed into the Binary Reef.`
-          }
-        ]
+            type: 'text',
+            text: `Results [Delegation]:\n${results.join('\n')}\n\n--- 🦞 JCLAW Conclusion ---\nThe pincer has snapped (snap!) shut on the target branch. Jules has been unleashed into the Binary Reef.`,
+          },
+        ],
       };
     } catch (error: any) {
       throw new Error(`Failed to initiate Jules delegation: ${error.message}`);
@@ -1781,7 +1874,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       const response = await axios.get(
         `https://jules.googleapis.com/v1alpha/sessions/${sessionId}/activities?pageSize=10`,
         {
-          headers: { "x-goog-api-key": this.config.julesApiKey }
+          headers: { 'x-goog-api-key': this.config.julesApiKey },
         }
       );
 
@@ -1799,7 +1892,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     let { repository } = args;
 
     if (!this.config.julesApiKey) {
-      throw new Error("JULES_API_KEY is required for feedback monitoring.");
+      throw new Error('JULES_API_KEY is required for feedback monitoring.');
     }
 
     // Auto-detect repository if not provided
@@ -1809,8 +1902,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     const data = await this.loadTaskData();
-    const activeTasks = data.tasks.filter(t =>
-      t.status === 'pending' || t.status === 'in_progress'
+    const activeTasks = data.tasks.filter(
+      (t) => t.status === 'pending' || t.status === 'in_progress'
     );
 
     const feedbackNeeded = [];
@@ -1822,7 +1915,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         const response = await axios.get(
           `https://jules.googleapis.com/v1alpha/sessions/${task.id}`,
           {
-            headers: { "x-goog-api-key": this.config.julesApiKey }
+            headers: { 'x-goog-api-key': this.config.julesApiKey },
           }
         );
 
@@ -1832,7 +1925,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
             taskId: task.id,
             repository: task.repository,
             branch: task.branch,
-            question: question || "Jules is awaiting feedback, but no message was found."
+            question: question || 'Jules is awaiting feedback, but no message was found.',
           });
         }
       } catch (e) {
@@ -1842,70 +1935,70 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     if (feedbackNeeded.length === 0) {
       return {
-        content: [{ type: "text", text: "No sessions currently require user feedback." }]
+        content: [{ type: 'text', text: 'No sessions currently require user feedback.' }],
       };
     }
 
-    const report = feedbackNeeded.map(f =>
-      `### Task ${f.taskId} (${f.repository})\n` +
-      `**Branch**: ${f.branch}\n` +
-      `**Jules Question**:\n> ${f.question}\n`
-    ).join('\n---\n');
+    const report = feedbackNeeded
+      .map(
+        (f) =>
+          `### Task ${f.taskId} (${f.repository})\n` +
+          `**Branch**: ${f.branch}\n` +
+          `**Jules Question**:\n> ${f.question}\n`
+      )
+      .join('\n---\n');
 
     return {
-      content: [{ type: "text", text: `# Feedback Required\n\n${report}` }]
+      content: [{ type: 'text', text: `# Feedback Required\n\n${report}` }],
     };
   }
 
   private async listSessionsViaApi(): Promise<any[]> {
     if (!this.config.julesApiKey) return [];
     try {
-      const response = await axios.get(
-        "https://jules.googleapis.com/v1alpha/sessions",
-        {
-          headers: { "x-goog-api-key": this.config.julesApiKey }
-        }
-      );
+      const response = await axios.get('https://jules.googleapis.com/v1alpha/sessions', {
+        headers: { 'x-goog-api-key': this.config.julesApiKey },
+      });
       return response.data.sessions || [];
     } catch (e) {
-      console.error("Failed to list sessions via API:", e);
+      console.error('Failed to list sessions via API:', e);
       return [];
     }
   }
 
   private async createTaskViaApi(args: any) {
-    const { description, repository, branch = "main", type = "standard", marker } = args;
+    const { description, repository, branch = 'main', type = 'standard', marker } = args;
 
     if (!this.config.julesApiKey) {
-      throw new Error("JULES_API_KEY is required for API-based task creation");
+      throw new Error('JULES_API_KEY is required for API-based task creation');
     }
 
     try {
       console.error(`Creating ${type} task via API for ${repository}...`);
 
       const response = await axios.post(
-        "https://jules.googleapis.com/v1alpha/sessions",
+        'https://jules.googleapis.com/v1alpha/sessions',
         {
           prompt: description,
           sourceContext: {
             source: `sources/github/${repository}`,
             githubRepoContext: {
-              startingBranch: branch
-            }
+              startingBranch: branch,
+            },
           },
-          title: description.slice(0, 50) + (description.length > 50 ? "..." : ""),
-          requirePlanApproval: true
+          title: description.slice(0, 50) + (description.length > 50 ? '...' : ''),
+          requirePlanApproval: true,
         },
         {
           headers: {
-            "x-goog-api-key": this.config.julesApiKey,
-            "Content-Type": "application/json"
-          }
+            'x-goog-api-key': this.config.julesApiKey,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
       const session = response.data;
-      const taskId = session.id || session.name.split("/").pop();
+      const taskId = session.id || session.name.split('/').pop();
       const url = `https://jules.google.com/task/${taskId}`;
 
       // Create task object for local tracking
@@ -1915,14 +2008,14 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         description,
         repository,
         branch,
-        status: "pending",
+        status: 'pending',
         type,
         marker,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         url,
         chatHistory: [],
-        sourceFiles: []
+        sourceFiles: [],
       };
 
       // Save to data
@@ -1935,13 +2028,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         task,
         content: [
           {
-            type: "text",
-            text: `Task created successfully via API!\n\nTask ID: ${taskId}\nRepository: ${repository}\nBranch: ${branch}\nURL: ${url}\n\nJules is now analyzing the task.`
-          }
-        ]
+            type: 'text',
+            text: `Task created successfully via API!\n\nTask ID: ${taskId}\nRepository: ${repository}\nBranch: ${branch}\nURL: ${url}\n\nJules is now analyzing the task.`,
+          },
+        ],
       };
     } catch (error: any) {
-      const errorDetail = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+      const errorDetail = error.response?.data
+        ? JSON.stringify(error.response.data)
+        : error.message;
       throw new Error(`API Task Creation Failed: ${errorDetail}`);
     }
   }
@@ -1951,7 +2046,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const actualTaskId = this.extractTaskId(taskId);
 
     if (!this.config.julesApiKey) {
-      throw new Error("JULES_API_KEY is required for API-based messages");
+      throw new Error('JULES_API_KEY is required for API-based messages');
     }
 
     try {
@@ -1960,26 +2055,28 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       await axios.post(
         `https://jules.googleapis.com/v1alpha/sessions/${actualTaskId}:sendMessage`,
         {
-          prompt: message
+          prompt: message,
         },
         {
           headers: {
-            "x-goog-api-key": this.config.julesApiKey,
-            "Content-Type": "application/json"
-          }
+            'x-goog-api-key': this.config.julesApiKey,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
       return {
         content: [
           {
-            type: "text",
-            text: `Message sent successfully to Jules session ${actualTaskId} via API.`
-          }
-        ]
+            type: 'text',
+            text: `Message sent successfully to Jules session ${actualTaskId} via API.`,
+          },
+        ],
       };
     } catch (error: any) {
-      const errorDetail = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+      const errorDetail = error.response?.data
+        ? JSON.stringify(error.response.data)
+        : error.message;
       throw new Error(`API Message Sending Failed: ${errorDetail}`);
     }
   }
@@ -1989,7 +2086,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const actualTaskId = this.extractTaskId(taskId);
 
     if (!this.config.julesApiKey) {
-      throw new Error("JULES_API_KEY is required for API-based approval");
+      throw new Error('JULES_API_KEY is required for API-based approval');
     }
 
     try {
@@ -2000,29 +2097,31 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         {},
         {
           headers: {
-            "x-goog-api-key": this.config.julesApiKey,
-            "Content-Type": "application/json"
-          }
+            'x-goog-api-key': this.config.julesApiKey,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
       return {
         content: [
           {
-            type: "text",
-            text: `Plan approved successfully for Jules session ${actualTaskId} via API.`
-          }
-        ]
+            type: 'text',
+            text: `Plan approved successfully for Jules session ${actualTaskId} via API.`,
+          },
+        ],
       };
     } catch (error: any) {
-      const errorDetail = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+      const errorDetail = error.response?.data
+        ? JSON.stringify(error.response.data)
+        : error.message;
       throw new Error(`API Plan Approval Failed: ${errorDetail}`);
     }
   }
 
   private async resumeTaskViaApi(args: any) {
     const { taskId } = args;
-    const message = "Please resume the task.";
+    const message = 'Please resume the task.';
     return await this.sendMessageViaApi({ taskId, message });
   }
 
@@ -2048,12 +2147,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async createTaskViaCli(args: any) {
-    const { description, repository, branch = "main", type = "standard", marker } = args;
+    const { description, repository, branch = 'main', type = 'standard', marker } = args;
     // Command: jules remote new --repo "octocat/repo" --session "Task Description" < /dev/null
     const cliOutput = await this.runJulesCli([
-      "remote", "new",
-      "--repo", repository,
-      "--session", description
+      'remote',
+      'new',
+      '--repo',
+      repository,
+      '--session',
+      description,
     ]);
 
     // Heuristic: Extract Session ID from CLI output
@@ -2076,7 +2178,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       updatedAt: new Date().toISOString(),
       url,
       chatHistory: [],
-      sourceFiles: []
+      sourceFiles: [],
     };
 
     // Save to data
@@ -2089,10 +2191,10 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       task,
       content: [
         {
-          type: "text",
-          text: `Task creation initiated via CLI:\n\n${cliOutput}\n\nSession ID Captured: ${taskId}\nNote: Check jules_list_tasks to monitor its progress.`
-        }
-      ]
+          type: 'text',
+          text: `Task creation initiated via CLI:\n\n${cliOutput}\n\nSession ID Captured: ${taskId}\nNote: Check jules_list_tasks to monitor its progress.`,
+        },
+      ],
     };
   }
 
@@ -2112,26 +2214,26 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       }
 
       // Repository selection
-      await page.locator("div.repo-select div.header-container").click();
-      await page.locator("div.repo-select input").fill(repository);
-      await page.locator("div.repo-select div.opt-list > swebot-option").first().click();
+      await page.locator('div.repo-select div.header-container').click();
+      await page.locator('div.repo-select input').fill(repository);
+      await page.locator('div.repo-select div.opt-list > swebot-option').first().click();
 
       // Branch selection
-      await page.locator("div.branch-select div.header-container > div").click();
+      await page.locator('div.branch-select div.header-container > div').click();
 
       // Try to find specific branch or select first available
-      const branchOptions = page.locator("div.branch-select swebot-option");
+      const branchOptions = page.locator('div.branch-select swebot-option');
       const branchCount = await branchOptions.count();
       if (branchCount > 0) {
         await branchOptions.first().click();
       }
 
       // Task description
-      await page.locator("textarea").fill(description);
+      await page.locator('textarea').fill(description);
       await page.keyboard.press('Enter');
 
       // Submit
-      await page.locator("div.chat-container button:nth-of-type(2)").click();
+      await page.locator('div.chat-container button:nth-of-type(2)').click();
 
       // Wait for task creation and get URL
       await page.waitForURL('**/task/**');
@@ -2152,7 +2254,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         updatedAt: new Date().toISOString(),
         url,
         chatHistory: [],
-        sourceFiles: []
+        sourceFiles: [],
       };
 
       // Save to data
@@ -2166,9 +2268,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         content: [
           {
             type: 'text',
-            text: `Task created successfully!\n\nTask ID: ${taskId}\nRepository: ${repository}\nBranch: ${branch}\nDescription: ${description}\nURL: ${url}\n\nTask is now pending Jules' analysis. You can check progress with jules_get_task.`
-          }
-        ]
+            text: `Task created successfully!\n\nTask ID: ${taskId}\nRepository: ${repository}\nBranch: ${branch}\nDescription: ${description}\nURL: ${url}\n\nTask is now pending Jules' analysis. You can check progress with jules_get_task.`,
+          },
+        ],
       };
     } catch (error) {
       throw new Error(`Failed to create task: ${error}`);
@@ -2191,7 +2293,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const actualTaskId = this.extractTaskId(taskId);
 
     if (!this.config.julesApiKey) {
-      throw new Error("JULES_API_KEY is required for API-based task details");
+      throw new Error('JULES_API_KEY is required for API-based task details');
     }
 
     try {
@@ -2201,26 +2303,29 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         `https://jules.googleapis.com/v1alpha/sessions/${actualTaskId}`,
         {
           headers: {
-            "x-goog-api-key": this.config.julesApiKey
-          }
+            'x-goog-api-key': this.config.julesApiKey,
+          },
         }
       );
 
       const session = response.data;
-      const latestMessage = session.state === 'AWAITING_USER_FEEDBACK' ?
-        await this.getLatestAgentMessage(actualTaskId) : undefined;
+      const latestMessage =
+        session.state === 'AWAITING_USER_FEEDBACK'
+          ? await this.getLatestAgentMessage(actualTaskId)
+          : undefined;
 
       return {
         content: [
           {
-            type: "text",
-            text: `Task Details (${actualTaskId}) via API:\n\n` +
-                  `Title: ${session.title}\n` +
-                  `State: ${session.state}` +
-                  (latestMessage ? `\n\nJULES QUESTION:\n${latestMessage}` : "") +
-                  `\n\nNote: Detailed chat history and file diffs may require browser or activity list.`
-          }
-        ]
+            type: 'text',
+            text:
+              `Task Details (${actualTaskId}) via API:\n\n` +
+              `Title: ${session.title}\n` +
+              `State: ${session.state}` +
+              (latestMessage ? `\n\nJULES QUESTION:\n${latestMessage}` : '') +
+              `\n\nNote: Detailed chat history and file diffs may require browser or activity list.`,
+          },
+        ],
       };
     } catch (error: any) {
       throw new Error(`API Get Task Failed: ${error.message}`);
@@ -2234,25 +2339,31 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     try {
       // Navigate to task
-      const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
+      const url = taskId.includes('jules.google.com')
+        ? taskId
+        : `${this.config.baseUrl}/task/${actualTaskId}`;
       await page.goto(url);
       await page.waitForLoadState('networkidle');
 
       // Extract task information
       const taskData = await page.evaluate(() => {
         // Extract chat messages
-        const chatMessages = Array.from(document.querySelectorAll('div.chat-content')).map(el => ({
-          content: el.textContent?.trim() || '',
-          timestamp: new Date().toISOString(),
-          type: 'system' as const
-        }));
+        const chatMessages = Array.from(document.querySelectorAll('div.chat-content')).map(
+          (el) => ({
+            content: el.textContent?.trim() || '',
+            timestamp: new Date().toISOString(),
+            type: 'system' as const,
+          })
+        );
 
         // Extract source files
-        const sourceFiles = Array.from(document.querySelectorAll('div.source-content a')).map(link => ({
-          filename: link.textContent?.trim() || '',
-          url: link.getAttribute('href') || '',
-          status: 'modified' as const
-        }));
+        const sourceFiles = Array.from(document.querySelectorAll('div.source-content a')).map(
+          (link) => ({
+            filename: link.textContent?.trim() || '',
+            url: link.getAttribute('href') || '',
+            status: 'modified' as const,
+          })
+        );
 
         // Extract task status
         const statusEl = document.querySelector('.task-status, [data-status], .status');
@@ -2261,13 +2372,13 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         return {
           chatMessages,
           sourceFiles,
-          status
+          status,
         };
       });
 
       // Update local data
       const data = await this.loadTaskData();
-      let task = data.tasks.find(t => t.id === actualTaskId);
+      const task = data.tasks.find((t) => t.id === actualTaskId);
 
       if (task) {
         task.chatHistory = taskData.chatMessages;
@@ -2280,15 +2391,19 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         content: [
           {
             type: 'text',
-            text: `Task Details (${actualTaskId}):\n\n` +
-                  `Status: ${taskData.status}\n` +
-                  `URL: ${url}\n` +
-                  `Source Files (${taskData.sourceFiles.length}):\n` +
-                  taskData.sourceFiles.map((f: any) => `  - ${f.filename}`).join('\n') +
-                  `\n\nRecent Chat Messages (${taskData.chatMessages.length}):\n` +
-                  taskData.chatMessages.slice(-3).map(m => `  - ${m.content.slice(0, 100)}...`).join('\n')
-          }
-        ]
+            text:
+              `Task Details (${actualTaskId}):\n\n` +
+              `Status: ${taskData.status}\n` +
+              `URL: ${url}\n` +
+              `Source Files (${taskData.sourceFiles.length}):\n` +
+              taskData.sourceFiles.map((f: any) => `  - ${f.filename}`).join('\n') +
+              `\n\nRecent Chat Messages (${taskData.chatMessages.length}):\n` +
+              taskData.chatMessages
+                .slice(-3)
+                .map((m) => `  - ${m.content.slice(0, 100)}...`)
+                .join('\n'),
+          },
+        ],
       };
     } catch (error) {
       throw new Error(`Failed to get task: ${error}`);
@@ -2312,12 +2427,14 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const page = await this.getPage();
 
     try {
-      const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
+      const url = taskId.includes('jules.google.com')
+        ? taskId
+        : `${this.config.baseUrl}/task/${actualTaskId}`;
       await page.goto(url);
       await page.waitForLoadState('networkidle');
 
       // Send message
-      await page.locator("div.bottom-bar-container textarea").fill(message);
+      await page.locator('div.bottom-bar-container textarea').fill(message);
       await page.keyboard.press('Enter');
 
       // Wait for response (brief)
@@ -2327,9 +2444,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         content: [
           {
             type: 'text',
-            text: `Message sent to Jules task ${actualTaskId}: "${message}"\n\nJules is processing your request. Check back with jules_get_task to see the response.`
-          }
-        ]
+            text: `Message sent to Jules task ${actualTaskId}: "${message}"\n\nJules is processing your request. Check back with jules_get_task to see the response.`,
+          },
+        ],
       };
     } catch (error) {
       throw new Error(`Failed to send message: ${error}`);
@@ -2357,12 +2474,14 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const page = await this.getPage();
 
     try {
-      const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
+      const url = taskId.includes('jules.google.com')
+        ? taskId
+        : `${this.config.baseUrl}/task/${actualTaskId}`;
       await page.goto(url);
       await page.waitForLoadState('networkidle');
 
       // Look for approval button
-      const approveButton = page.locator("div.approve-plan-container > button");
+      const approveButton = page.locator('div.approve-plan-container > button');
       if (await approveButton.isVisible()) {
         await approveButton.click();
 
@@ -2370,18 +2489,18 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           content: [
             {
               type: 'text',
-              text: `Plan approved for task ${actualTaskId}. Jules will now execute the planned changes.`
-            }
-          ]
+              text: `Plan approved for task ${actualTaskId}. Jules will now execute the planned changes.`,
+            },
+          ],
         };
       } else {
         return {
           content: [
             {
               type: 'text',
-              text: `No plan approval needed for task ${actualTaskId}. The task may already be approved or not ready for approval yet.`
-            }
-          ]
+              text: `No plan approval needed for task ${actualTaskId}. The task may already be approved or not ready for approval yet.`,
+            },
+          ],
         };
       }
     } catch (error) {
@@ -2407,12 +2526,14 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const page = await this.getPage();
 
     try {
-      const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
+      const url = taskId.includes('jules.google.com')
+        ? taskId
+        : `${this.config.baseUrl}/task/${actualTaskId}`;
       await page.goto(url);
       await page.waitForLoadState('networkidle');
 
       // Look for resume button
-      const resumeButton = page.locator("div.resume-button-container svg");
+      const resumeButton = page.locator('div.resume-button-container svg');
       if (await resumeButton.isVisible()) {
         await resumeButton.click();
 
@@ -2420,18 +2541,18 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           content: [
             {
               type: 'text',
-              text: `Task ${actualTaskId} resumed successfully. Jules will continue working on this task.`
-            }
-          ]
+              text: `Task ${actualTaskId} resumed successfully. Jules will continue working on this task.`,
+            },
+          ],
         };
       } else {
         return {
           content: [
             {
               type: 'text',
-              text: `Task ${actualTaskId} doesn't appear to be paused or may already be active.`
-            }
-          ]
+              text: `Task ${actualTaskId} doesn't appear to be paused or may already be active.`,
+            },
+          ],
         };
       }
     } catch (error) {
@@ -2451,7 +2572,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     // SECONDARY: Local Task Data (for tasks created via Browser/API that we track)
-    let { status = 'all', limit = 10, repository } = args;
+    const { status = 'all', limit = 10 } = args;
+    let { repository } = args;
 
     // Auto-detect repository if not provided
     if (!repository) {
@@ -2463,41 +2585,46 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     let filteredTasks = data.tasks;
     if (status !== 'all') {
-      filteredTasks = data.tasks.filter(task => task.status === status);
+      filteredTasks = data.tasks.filter((task) => task.status === status);
     }
 
     if (repository) {
-      filteredTasks = filteredTasks.filter(task => task.repository.toLowerCase() === repository.toLowerCase());
+      filteredTasks = filteredTasks.filter(
+        (task) => task.repository.toLowerCase() === repository.toLowerCase()
+      );
     }
 
     const tasks = filteredTasks.slice(0, limit);
 
-    const taskList = tasks.map(task =>
-      `${task.id}${task.type === 'delegated' ? ' [DELEGATED]' : ''} - ${task.title}\n` +
-      `  Repository: ${task.repository}\n` +
-      `  Branch: ${task.branch}\n` +
-      `  Status: ${task.status}\n` +
-      `  Created: ${new Date(task.createdAt).toLocaleDateString()}\n` +
-      `  URL: ${task.url}\n`
-    ).join('\n');
+    const taskList = tasks
+      .map(
+        (task) =>
+          `${task.id}${task.type === 'delegated' ? ' [DELEGATED]' : ''} - ${task.title}\n` +
+          `  Repository: ${task.repository}\n` +
+          `  Branch: ${task.branch}\n` +
+          `  Status: ${task.status}\n` +
+          `  Created: ${new Date(task.createdAt).toLocaleDateString()}\n` +
+          `  URL: ${task.url}\n`
+      )
+      .join('\n');
 
     return {
       content: [
         {
           type: 'text',
-          text: `Jules Tasks for ${repository || 'all repositories'} (${tasks.length} of ${filteredTasks.length} total):\n\n${taskList || 'No tasks found.'}`
-        }
-      ]
+          text: `Jules Tasks for ${repository || 'all repositories'} (${tasks.length} of ${filteredTasks.length} total):\n\n${taskList || 'No tasks found.'}`,
+        },
+      ],
     };
   }
 
   private async listTasksViaCli(args: any) {
     const { status = 'all' } = args;
-    let cliArgs = ["remote", "list", "--session"];
+    const cliArgs = ['remote', 'list', '--session'];
 
     const output = await this.runJulesCli(cliArgs);
     return {
-      content: [{ type: "text", text: `Jules CLI Task List:\n\n${output}` }]
+      content: [{ type: 'text', text: `Jules CLI Task List:\n\n${output}` }],
     };
   }
 
@@ -2533,7 +2660,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const actualTaskId = this.extractTaskId(taskId);
 
     if (!this.config.julesApiKey) {
-      throw new Error("JULES_API_KEY is required for API-based analysis");
+      throw new Error('JULES_API_KEY is required for API-based analysis');
     }
 
     try {
@@ -2544,42 +2671,45 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         `https://jules.googleapis.com/v1alpha/sessions/${actualTaskId}/activities?pageSize=20`,
         {
           headers: {
-            "x-goog-api-key": this.config.julesApiKey
-          }
+            'x-goog-api-key': this.config.julesApiKey,
+          },
         }
       );
 
       const activities = response.data.activities || [];
-      const summary = activities.map((a: any) => {
-        const type = Object.keys(a).find(k => k !== 'createTime' && k !== 'name' && k !== 'description') || 'activity';
-        return `- ${type}: ${a.description || a[type]?.description || a[type]?.prompt || ""}`;
-      }).join('\n');
+      const summary = activities
+        .map((a: any) => {
+          const type =
+            Object.keys(a).find((k) => k !== 'createTime' && k !== 'name' && k !== 'description') ||
+            'activity';
+          return `- ${type}: ${a.description || a[type]?.description || a[type]?.prompt || ''}`;
+        })
+        .join('\n');
 
       // Find ChangeSet artifacts to salvage code
-      const changeSets = activities
-        .filter((a: any) => a.changeSet)
-        .map((a: any) => a.changeSet);
+      const changeSets = activities.filter((a: any) => a.changeSet).map((a: any) => a.changeSet);
 
-      let patchContent = "";
+      let patchContent = '';
       if (changeSets.length > 0) {
         const latestPatch = changeSets[0]; // Activities are usually descending
         if (returnPatch) {
           patchContent = `\n\n--- FULL GIT PATCH ---\n${latestPatch.gitPatch}\n\n`;
         } else {
-          patchContent = `\n\n--- LATEST CODE ARTIFACT ---\n` +
-                        `Commit Message: ${latestPatch.suggestedCommitMessage || "N/A"}\n` +
-                        `Patch Snippet (first 500 chars):\n${latestPatch.gitPatch.slice(0, 500)}...\n` +
-                        `*Use returnPatch: true to get the full diff.*`;
+          patchContent =
+            `\n\n--- LATEST CODE ARTIFACT ---\n` +
+            `Commit Message: ${latestPatch.suggestedCommitMessage || 'N/A'}\n` +
+            `Patch Snippet (first 500 chars):\n${latestPatch.gitPatch.slice(0, 500)}...\n` +
+            `*Use returnPatch: true to get the full diff.*`;
         }
       }
 
       return {
         content: [
           {
-            type: "text",
-            text: `API Code Analysis for Session ${actualTaskId}:\n\nRecent Activities:\n${summary || "No activities found yet."}${patchContent}`
-          }
-        ]
+            type: 'text',
+            text: `API Code Analysis for Session ${actualTaskId}:\n\nRecent Activities:\n${summary || 'No activities found yet.'}${patchContent}`,
+          },
+        ],
       };
     } catch (error: any) {
       throw new Error(`API Code Analysis Failed: ${error.message}`);
@@ -2592,43 +2722,50 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const page = await this.getPage();
 
     try {
-      const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
+      const url = taskId.includes('jules.google.com')
+        ? taskId
+        : `${this.config.baseUrl}/task/${actualTaskId}`;
       await page.goto(url);
       await page.waitForLoadState('networkidle');
 
       // Extract code analysis information
       const codeData = await page.evaluate((includeSource) => {
-        const sourceFiles = Array.from(document.querySelectorAll('div.source-content a')).map(link => ({
-          filename: link.textContent?.trim() || '',
-          url: link.getAttribute('href') || ''
-        }));
+        const sourceFiles = Array.from(document.querySelectorAll('div.source-content a')).map(
+          (link) => ({
+            filename: link.textContent?.trim() || '',
+            url: link.getAttribute('href') || '',
+          })
+        );
 
-        const codeChanges = Array.from(document.querySelectorAll('swebot-code-diff-update-card')).map(card => ({
+        const codeChanges = Array.from(
+          document.querySelectorAll('swebot-code-diff-update-card')
+        ).map((card) => ({
           type: 'code-change',
-          content: card.textContent?.trim() || ''
+          content: card.textContent?.trim() || '',
         }));
 
         return {
           sourceFiles,
           codeChanges,
           totalFiles: sourceFiles.length,
-          totalChanges: codeChanges.length
+          totalChanges: codeChanges.length,
         };
       }, includeSourceCode);
 
-      const analysis = `Code Analysis for Task ${actualTaskId}:\n\n` +
-                     `Total Files: ${codeData.totalFiles}\n` +
-                     `Total Changes: ${codeData.totalChanges}\n\n` +
-                     `Modified Files:\n${codeData.sourceFiles.map(f => `  - ${f.filename}`).join('\n')}\n\n` +
-                     `Code Changes Summary:\n${codeData.codeChanges.map(c => `  - ${c.content.slice(0, 100)}...`).join('\n')}`;
+      const analysis =
+        `Code Analysis for Task ${actualTaskId}:\n\n` +
+        `Total Files: ${codeData.totalFiles}\n` +
+        `Total Changes: ${codeData.totalChanges}\n\n` +
+        `Modified Files:\n${codeData.sourceFiles.map((f) => `  - ${f.filename}`).join('\n')}\n\n` +
+        `Code Changes Summary:\n${codeData.codeChanges.map((c) => `  - ${c.content.slice(0, 100)}...`).join('\n')}`;
 
       return {
         content: [
           {
             type: 'text',
-            text: analysis
-          }
-        ]
+            text: analysis,
+          },
+        ],
       };
     } catch (error) {
       throw new Error(`Failed to analyze code: ${error}`);
@@ -2640,16 +2777,16 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const actualTaskId = this.extractTaskId(taskId);
 
     // Attempt to get status and diff via CLI
-    const status = await this.runJulesCli(["task", "status", actualTaskId]);
-    const diff = await this.runJulesCli(["task", "diff", actualTaskId]);
+    const status = await this.runJulesCli(['task', 'status', actualTaskId]);
+    const diff = await this.runJulesCli(['task', 'diff', actualTaskId]);
 
     return {
       content: [
         {
-          type: "text",
-          text: `Jules CLI Code Analysis for Task ${actualTaskId}:\n\n--- STATUS ---\n${status}\n\n--- DIFF ---\n${diff}`
-        }
-      ]
+          type: 'text',
+          text: `Jules CLI Code Analysis for Task ${actualTaskId}:\n\n--- STATUS ---\n${status}\n\n--- DIFF ---\n${diff}`,
+        },
+      ],
     };
   }
 
@@ -2658,7 +2795,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const actualTaskId = this.extractTaskId(taskId);
 
     if (!this.config.julesApiKey) {
-      throw new Error("JULES_API_KEY is required for audit reporting.");
+      throw new Error('JULES_API_KEY is required for audit reporting.');
     }
 
     try {
@@ -2667,59 +2804,65 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       // 1. Get Session Summary
       const sessionResponse = await axios.get(
         `https://jules.googleapis.com/v1alpha/sessions/${actualTaskId}`,
-        { headers: { "x-goog-api-key": this.config.julesApiKey } }
+        { headers: { 'x-goog-api-key': this.config.julesApiKey } }
       );
       const session = sessionResponse.data;
 
       // 2. Get Activities
       const activitiesResponse = await axios.get(
         `https://jules.googleapis.com/v1alpha/sessions/${actualTaskId}/activities?pageSize=50`,
-        { headers: { "x-goog-api-key": this.config.julesApiKey } }
+        { headers: { 'x-goog-api-key': this.config.julesApiKey } }
       );
       const activities = activitiesResponse.data.activities || [];
 
       // 3. Process Activities for Audit
-      const events = activities.map((a: any) => {
-        let eventType = "UNKNOWN";
-        let detail = "";
+      const events = activities
+        .map((a: any) => {
+          let eventType = 'UNKNOWN';
+          let detail = '';
 
-        if (a.planGenerated) {
-          eventType = "PLAN_GENERATED";
-          detail = `Plan contains ${a.planGenerated.steps?.length || 0} steps.`;
-        } else if (a.planApproved) {
-          eventType = "PLAN_APPROVED";
-        } else if (a.agentMessaged) {
-          eventType = "JULES_MESSAGE";
-          detail = a.agentMessaged.prompt;
-        } else if (a.userMessaged) {
-          eventType = "USER_MESSAGE";
-          detail = a.userMessaged.prompt;
-        } else if (a.changeSet) {
-          eventType = "CODE_ARTIFACT";
-          detail = `Produced patch: ${a.changeSet.suggestedCommitMessage || "No message"}`;
-        } else if (a.sessionCompleted) {
-          eventType = "COMPLETED";
-        } else if (a.sessionFailed) {
-          eventType = "FAILED";
-          detail = a.sessionFailed.reason || "Unknown failure reason";
-        } else if (a.progressUpdated) {
-          eventType = "PROGRESS";
-          detail = a.progressUpdated.description;
-        } else {
-          // Detect arbitrary event type from top-level key
-          eventType = Object.keys(a).find(k => k !== 'createTime' && k !== 'name' && k !== 'description') || "ACTIVITY";
-          detail = a.description || "No detail";
-        }
+          if (a.planGenerated) {
+            eventType = 'PLAN_GENERATED';
+            detail = `Plan contains ${a.planGenerated.steps?.length || 0} steps.`;
+          } else if (a.planApproved) {
+            eventType = 'PLAN_APPROVED';
+          } else if (a.agentMessaged) {
+            eventType = 'JULES_MESSAGE';
+            detail = a.agentMessaged.prompt;
+          } else if (a.userMessaged) {
+            eventType = 'USER_MESSAGE';
+            detail = a.userMessaged.prompt;
+          } else if (a.changeSet) {
+            eventType = 'CODE_ARTIFACT';
+            detail = `Produced patch: ${a.changeSet.suggestedCommitMessage || 'No message'}`;
+          } else if (a.sessionCompleted) {
+            eventType = 'COMPLETED';
+          } else if (a.sessionFailed) {
+            eventType = 'FAILED';
+            detail = a.sessionFailed.reason || 'Unknown failure reason';
+          } else if (a.progressUpdated) {
+            eventType = 'PROGRESS';
+            detail = a.progressUpdated.description;
+          } else {
+            // Detect arbitrary event type from top-level key
+            eventType =
+              Object.keys(a).find(
+                (k) => k !== 'createTime' && k !== 'name' && k !== 'description'
+              ) || 'ACTIVITY';
+            detail = a.description || 'No detail';
+          }
 
-        const safeDetail = (detail || "").replace(/\n/g, ' ');
-        return `| ${new Date(a.createTime).toLocaleString()} | ${eventType} | ${safeDetail} |`;
-      }).reverse();
+          const safeDetail = (detail || '').replace(/\n/g, ' ');
+          return `| ${new Date(a.createTime).toLocaleString()} | ${eventType} | ${safeDetail} |`;
+        })
+        .reverse();
 
       // 4. Identify Code Outcomes
       const patches = activities.filter((a: any) => a.changeSet).map((a: any) => a.changeSet);
-      const outcomeText = patches.length > 0 ?
-        `✅ Delivered ${patches.length} code checkpoint(s). Final patch salvaged: ${patches[0].suggestedCommitMessage}` :
-        `❌ No code patches recorded in session history.`;
+      const outcomeText =
+        patches.length > 0
+          ? `✅ Delivered ${patches.length} code checkpoint(s). Final patch salvaged: ${patches[0].suggestedCommitMessage}`
+          : `❌ No code patches recorded in session history.`;
 
       // 5. Identify Most Recent Code Review
       const reviewText = this.extractCodeReviewFromActivities(activities);
@@ -2730,13 +2873,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         `**Session ID**: \`${actualTaskId}\``,
         `**Title**: ${session.title}`,
         `**Final State**: \`${session.state}\``,
-        `**Repository**: ${session.sourceContext?.source || "Unknown"}`,
+        `**Repository**: ${session.sourceContext?.source || 'Unknown'}`,
         `**Generated At**: ${new Date().toLocaleString()}`,
         ``,
         `## 📝 Intent Statement (Initial Prompt)`,
-        `> ${session.prompt || "No initial prompt record available."}`,
+        `> ${session.prompt || 'No initial prompt record available.'}`,
         ``,
-        ...(reviewText ? [`## 🔍 Most Recent Code Review`, `> ${reviewText.replace(/\n/g, '\n> ')}`, ``] : []),
+        ...(reviewText
+          ? [`## 🔍 Most Recent Code Review`, `> ${reviewText.replace(/\n/g, '\n> ')}`, ``]
+          : []),
         `## 🔄 Delivery Activity Log`,
         `| Timestamp | Event Type | Details |`,
         `| :--- | :--- | :--- |`,
@@ -2745,19 +2890,19 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         `## 🏁 Verification & Outcome`,
         outcomeText,
         ``,
-        `**Audit Conclusion**: ${session.state === 'COMPLETED' ? "Successfully Delivered" : "Incomplete or Failed Delivery"}`,
+        `**Audit Conclusion**: ${session.state === 'COMPLETED' ? 'Successfully Delivered' : 'Incomplete or Failed Delivery'}`,
         `---`,
-        `*Report generated via Google Jules MCP Audit Tier.*`
+        `*Report generated via Google Jules MCP Audit Tier.*`,
       ].join('\n');
 
       // 7. Save to local audit log (Brain pattern)
-      let localPath = "";
+      let localPath = '';
       try {
-        const auditDir = path.resolve(process.cwd(), ".jules/audit");
+        const auditDir = path.resolve(process.cwd(), '.jules/audit');
         await fs.mkdir(auditDir, { recursive: true });
         const fileName = `${actualTaskId}.jclaw.md`;
         const auditFile = path.join(auditDir, fileName);
-        await fs.writeFile(auditFile, report, "utf8");
+        await fs.writeFile(auditFile, report, 'utf8');
         localPath = `.jules/audit/${fileName}`;
         console.error(`Audit report saved to ${auditFile}`);
       } catch (e: any) {
@@ -2765,12 +2910,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       }
 
       return {
-        content: [{
-          type: "text",
-          text: (localPath ? `✅ Audit recorded: ${localPath}\n\n` : "") +
-                report +
-                "\n\n--- 🦞 JCLAW Conclusion ---\nThe reef is secure; this session's history is now safely encased in a JCLAW audit shell."
-        }]
+        content: [
+          {
+            type: 'text',
+            text:
+              (localPath ? `✅ Audit recorded: ${localPath}\n\n` : '') +
+              report +
+              "\n\n--- 🦞 JCLAW Conclusion ---\nThe reef is secure; this session's history is now safely encased in a JCLAW audit shell.",
+          },
+        ],
       };
     } catch (error: any) {
       throw new Error(`Audit Report Generation Failed: ${error.message}`);
@@ -2780,24 +2928,28 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   private async concludeTask(args: any) {
     const { taskId, status, remainingWork, residualTaskId } = args;
     const actualTaskId = this.extractTaskId(taskId);
-    const activeDir = path.resolve(process.cwd(), ".jules/active");
-    const archiveDir = path.resolve(process.cwd(), ".jules/archive");
-    const backlogDir = path.resolve(process.cwd(), ".jules/backlog");
+    const activeDir = path.resolve(process.cwd(), '.jules/active');
+    const archiveDir = path.resolve(process.cwd(), '.jules/archive');
+    const backlogDir = path.resolve(process.cwd(), '.jules/backlog');
 
-    let results = [];
-    let sourceFile = "";
+    const results = [];
+    let sourceFile = '';
 
     // 1. Locate the instruction file in active/
     const possibleNames = taskId ? [taskId, `${taskId}.md`] : [];
     try {
       const detected = await this.detectGitContext();
       if (detected.branch) {
-        possibleNames.push(detected.branch, `${detected.branch}.md`, detected.branch.replace(/\//g, "-") + ".md");
+        possibleNames.push(
+          detected.branch,
+          `${detected.branch}.md`,
+          detected.branch.replace(/\//g, '-') + '.md'
+        );
       }
     } catch (e) {}
 
     for (const name of possibleNames) {
-      const p = path.join(activeDir, name.endsWith(".md") ? name : `${name}.md`);
+      const p = path.join(activeDir, name.endsWith('.md') ? name : `${name}.md`);
       try {
         await fs.access(p);
         sourceFile = p;
@@ -2808,13 +2960,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     if (!sourceFile) {
       try {
         const files = await fs.readdir(activeDir);
-        const found = files.find(f => f.includes(actualTaskId));
+        const found = files.find((f) => f.includes(actualTaskId));
         if (found) sourceFile = path.join(activeDir, found);
       } catch (e) {}
     }
 
     if (!sourceFile) {
-      results.push(`⚠ Could not find instruction file for ${actualTaskId} in .jules/active/. Archiving file movement skipped.`);
+      results.push(
+        `⚠ Could not find instruction file for ${actualTaskId} in .jules/active/. Archiving file movement skipped.`
+      );
     }
 
     // 2. Perform Movement
@@ -2830,15 +2984,15 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
           const residualFile = `${residualName}.md`;
 
           // Append reference before moving
-          const content = await fs.readFile(sourceFile, "utf8");
+          const content = await fs.readFile(sourceFile, 'utf8');
           const updatedContent = `${content}\n\n### 🔄 Residual Reference\nThis task was incomplete. Remaining work is re-issued to: \`.jules/backlog/${residualFile}\``;
-          await fs.writeFile(sourceFile, updatedContent, "utf8");
+          await fs.writeFile(sourceFile, updatedContent, 'utf8');
 
           // Create backlog file
           await fs.mkdir(backlogDir, { recursive: true });
           const backlogPath = path.join(backlogDir, residualFile);
           const backlogContent = `## Task: ${residualName} (Residual)\n**Original Session**: ${actualTaskId}\n\n### Remaining Work\n${remainingWork}`;
-          await fs.writeFile(backlogPath, backlogContent, "utf8");
+          await fs.writeFile(backlogPath, backlogContent, 'utf8');
           results.push(`✓ Re-issued remaining work to .jules/backlog/${residualFile}`);
         }
 
@@ -2850,25 +3004,31 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     return {
-      content: [{
-        type: "text",
-        text: `Results [Task ${actualTaskId}]:\n${results.join("\n")}\n\n--- 🦞 JCLAW Conclusion ---\nThe pincer has released. The workflow has been successfully molted into its next state.`
-      }]
+      content: [
+        {
+          type: 'text',
+          text: `Results [Task ${actualTaskId}]:\n${results.join('\n')}\n\n--- 🦞 JCLAW Conclusion ---\nThe pincer has released. The workflow has been successfully molted into its next state.`,
+        },
+      ],
     };
   }
 
   private extractCodeReviewFromActivities(activities: any[]): string | undefined {
     // Search for PROGRESS activities that contain analysis/reasoning keywords
-    const reviewActivity = activities.find(a => {
-      const detail = a.progressUpdated?.description || a.description || "";
-      return detail.includes("Analysis and Reasoning") ||
-             detail.includes("Evaluation of the Solution") ||
-             detail.includes("Merge Assessment") ||
-             detail.includes("#Correct#") ||
-             detail.includes("#Incomplete#");
+    const reviewActivity = activities.find((a) => {
+      const detail = a.progressUpdated?.description || a.description || '';
+      return (
+        detail.includes('Analysis and Reasoning') ||
+        detail.includes('Evaluation of the Solution') ||
+        detail.includes('Merge Assessment') ||
+        detail.includes('#Correct#') ||
+        detail.includes('#Incomplete#')
+      );
     });
 
-    return reviewActivity ? (reviewActivity.progressUpdated?.description || reviewActivity.description) : undefined;
+    return reviewActivity
+      ? reviewActivity.progressUpdated?.description || reviewActivity.description
+      : undefined;
   }
 
   private async getCodeReview(args: any) {
@@ -2876,13 +3036,13 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const actualTaskId = this.extractTaskId(taskId);
 
     if (!this.config.julesApiKey) {
-      throw new Error("JULES_API_KEY is required for code review extraction.");
+      throw new Error('JULES_API_KEY is required for code review extraction.');
     }
 
     try {
       const activitiesResponse = await axios.get(
         `https://jules.googleapis.com/v1alpha/sessions/${actualTaskId}/activities?pageSize=50`,
-        { headers: { "x-goog-api-key": this.config.julesApiKey } }
+        { headers: { 'x-goog-api-key': this.config.julesApiKey } }
       );
       const activities = activitiesResponse.data.activities || [];
       const review = this.extractCodeReviewFromActivities(activities);
@@ -2891,28 +3051,28 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         return {
           content: [
             {
-              type: "text",
-              text: `## 🔍 Latest Code Review for Session ${actualTaskId}\n\n${review}`
-            }
-          ]
+              type: 'text',
+              text: `## 🔍 Latest Code Review for Session ${actualTaskId}\n\n${review}`,
+            },
+          ],
         };
       } else {
         return {
           content: [
             {
-              type: "text",
-              text: `❌ No formal code review found in the session history for ${actualTaskId}.\n\n` +
-                    `You can instruct Jules to perform a review by sending a message:\n` +
-                    `"Please perform a final code review and provide a merge assessment."`
-            }
-          ]
+              type: 'text',
+              text:
+                `❌ No formal code review found in the session history for ${actualTaskId}.\n\n` +
+                `You can instruct Jules to perform a review by sending a message:\n` +
+                `"Please perform a final code review and provide a merge assessment."`,
+            },
+          ],
         };
       }
     } catch (error: any) {
       throw new Error(`Failed to extract code review: ${error.message}`);
     }
   }
-
 
   private async bulkCreateTasks(args: any) {
     const { tasks } = args;
@@ -2931,9 +3091,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       content: [
         {
           type: 'text',
-          text: `Bulk Task Creation Results (${tasks.length} tasks):\n\n${results.join('\n')}`
-        }
-      ]
+          text: `Bulk Task Creation Results (${tasks.length} tasks):\n\n${results.join('\n')}`,
+        },
+      ],
     };
   }
 
@@ -2944,7 +3104,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     try {
       if (taskId) {
         const actualTaskId = this.extractTaskId(taskId);
-        const url = taskId.includes('jules.google.com') ? taskId : `${this.config.baseUrl}/task/${actualTaskId}`;
+        const url = taskId.includes('jules.google.com')
+          ? taskId
+          : `${this.config.baseUrl}/task/${actualTaskId}`;
         await page.goto(url);
         await page.waitForLoadState('networkidle');
       }
@@ -2956,9 +3118,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         content: [
           {
             type: 'text',
-            text: `Screenshot saved to: ${screenshotPath}`
-          }
-        ]
+            text: `Screenshot saved to: ${screenshotPath}`,
+          },
+        ],
       };
     } catch (error) {
       throw new Error(`Failed to take screenshot: ${error}`);
@@ -2973,26 +3135,29 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       const cookies = await page.context().cookies();
 
       if (format === 'string') {
-        const cookieString = cookies.map(cookie =>
-          `${cookie.name}=${cookie.value}; domain=${cookie.domain}; path=${cookie.path}`
-        ).join('; ');
+        const cookieString = cookies
+          .map(
+            (cookie) =>
+              `${cookie.name}=${cookie.value}; domain=${cookie.domain}; path=${cookie.path}`
+          )
+          .join('; ');
 
         return {
           content: [
             {
               type: 'text',
-              text: `Cookie String:\\n${cookieString}`
-            }
-          ]
+              text: `Cookie String:\\n${cookieString}`,
+            },
+          ],
         };
       } else {
         return {
           content: [
             {
               type: 'text',
-              text: `Cookies (${cookies.length} total):\\n${JSON.stringify(cookies, null, 2)}`
-            }
-          ]
+              text: `Cookies (${cookies.length} total):\\n${JSON.stringify(cookies, null, 2)}`,
+            },
+          ],
         };
       }
     } catch (error) {
@@ -3005,7 +3170,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const page = await this.getPage();
 
     try {
-      let cookiesToSet: Array<{name: string, value: string, domain: string}> = [];
+      let cookiesToSet: Array<{ name: string; value: string; domain: string }> = [];
 
       if (format === 'string') {
         cookiesToSet = this.parseCookiesFromString(cookies);
@@ -3014,12 +3179,14 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         cookiesToSet = Array.isArray(parsed) ? parsed : [parsed];
       }
 
-      await page.context().addCookies(cookiesToSet.map(cookie => ({
-        name: cookie.name,
-        value: cookie.value,
-        domain: cookie.domain,
-        path: '/',
-      })));
+      await page.context().addCookies(
+        cookiesToSet.map((cookie) => ({
+          name: cookie.name,
+          value: cookie.value,
+          domain: cookie.domain,
+          path: '/',
+        }))
+      );
 
       // Save cookies if in cookies mode
       if (this.config.sessionMode === 'cookies' && this.config.cookiePath) {
@@ -3030,9 +3197,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         content: [
           {
             type: 'text',
-            text: `Successfully set ${cookiesToSet.length} cookies. Session authentication should now work for Google Jules.`
-          }
-        ]
+            text: `Successfully set ${cookiesToSet.length} cookies. Session authentication should now work for Google Jules.`,
+          },
+        ],
       };
     } catch (error) {
       throw new Error(`Failed to set cookies: ${error}`);
@@ -3042,7 +3209,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   private async getSessionInfo(args: any) {
     // Check if CLI is functional
     let hasJulesCli = false;
-    let resolvedCliPath = "jules";
+    let resolvedCliPath = 'jules';
     try {
       resolvedCliPath = await this.resolveJulesCliPath();
       const execPromise = promisify(exec);
@@ -3053,7 +3220,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
 
     const sessionInfo = {
-      mcpVersion: "1.0.1-fixed",
+      mcpVersion: '1.0.1-fixed',
       sessionMode: this.config.sessionMode,
       hasUserDataDir: !!this.config.userDataDir,
       hasCookiePath: !!this.config.cookiePath,
@@ -3068,16 +3235,16 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       baseUrl: this.config.baseUrl,
       dataPath: this.config.dataPath,
       browserConnected: !!this.browser,
-      pageReady: !!this.page
+      pageReady: !!this.page,
     };
 
     return {
       content: [
         {
           type: 'text',
-          text: `Jules MCP Session Info:\\n${JSON.stringify(sessionInfo, null, 2)}`
-        }
-      ]
+          text: `Jules MCP Session Info:\\n${JSON.stringify(sessionInfo, null, 2)}`,
+        },
+      ],
     };
   }
 
@@ -3089,9 +3256,10 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     let detectedEnv = environment;
     if (environment === 'auto-detect') {
       // Check for cloud environment indicators
-      const isCloud = process.env.NODE_ENV === 'production' ||
-                     process.env.SMITHERY_DEPLOYMENT === 'true' ||
-                     !hasChrome;
+      const isCloud =
+        process.env.NODE_ENV === 'production' ||
+        process.env.SMITHERY_DEPLOYMENT === 'true' ||
+        !hasChrome;
       detectedEnv = isCloud ? 'cloud' : 'local';
     }
 
@@ -3127,9 +3295,8 @@ In the deepest trenches of technical debt, the Crimson Orchestrator (JCLAW) uses
         'Read jules://prompts/browserbase-setup for detailed setup',
         'Use jules_session_info to verify configuration',
         'Test with jules_screenshot to see remote browser',
-        'Create first task with jules_create_task'
+        'Create first task with jules_create_task',
       ];
-
     } else if (priority === 'ease-of-use' && hasChrome) {
       recommendation = 'chrome-profile';
       setupInstructions = `
@@ -3154,9 +3321,8 @@ CHROME_USER_DATA_DIR=/Users/[username]/Library/Application Support/Google/Chrome
         'Read jules://guides/session-modes for profile path detection',
         'Set CHROME_USER_DATA_DIR environment variable',
         'Use jules_session_info to verify configuration',
-        'Test with jules_create_task to confirm authentication'
+        'Test with jules_create_task to confirm authentication',
       ];
-
     } else if (priority === 'portability') {
       recommendation = 'cookies';
       setupInstructions = `
@@ -3179,9 +3345,8 @@ COOKIES_PATH=~/.jclaw/cookies.json
         'Read jules://prompts/cookie-extraction for step-by-step extraction',
         'Use jules_get_cookies to extract your current session',
         'Format cookies for GOOGLE_AUTH_COOKIES environment variable',
-        'Test with jules_set_cookies and jules_session_info'
+        'Test with jules_set_cookies and jules_session_info',
       ];
-
     } else {
       recommendation = 'persistent';
       setupInstructions = `
@@ -3203,7 +3368,7 @@ CHROME_USER_DATA_DIR=~/.jclaw/browser-data
         'Create browser data directory if needed',
         'Use jules_session_info to verify configuration',
         'Complete initial Google authentication',
-        'Test persistence with multiple MCP restarts'
+        'Test persistence with multiple MCP restarts',
       ];
     }
 
@@ -3240,17 +3405,15 @@ ${nextSteps.map((step, index) => `${index + 1}. ${step}`).join('\\n')}
       content: [
         {
           type: 'text',
-          text: wizardResponse
-        }
-      ]
+          text: wizardResponse,
+        },
+      ],
     };
   }
 
   private async getActiveTasks(): Promise<JulesTask[]> {
     const data = await this.loadTaskData();
-    return data.tasks.filter(task =>
-      task.status === 'in_progress' || task.status === 'pending'
-    );
+    return data.tasks.filter((task) => task.status === 'in_progress' || task.status === 'pending');
   }
 
   async cleanup() {
@@ -3270,12 +3433,12 @@ ${nextSteps.map((step, index) => `${index + 1}. ${step}`).join('\\n')}
     await this.server.connect(transport);
 
     if (this.config.debug) {
-      console.error("Google Jules MCP Server running on stdio");
-      console.error("Configuration:", {
+      console.error('Google Jules MCP Server running on stdio');
+      console.error('Configuration:', {
         headless: this.config.headless,
         timeout: this.config.timeout,
         debug: this.config.debug,
-        dataPath: this.config.dataPath
+        dataPath: this.config.dataPath,
       });
     }
   }
