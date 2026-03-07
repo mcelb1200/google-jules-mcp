@@ -1,0 +1,2 @@
+description = "Check if any active Jules tasks are awaiting user feedback/confirmation."
+prompt = "Use the jules_check_feedback tool to scan all active tasks and retrieve any questions or requests from Jules. Argument: {{args}}"

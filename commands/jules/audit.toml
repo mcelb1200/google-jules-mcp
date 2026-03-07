@@ -1,0 +1,2 @@
+description = "Generate a comprehensive audit report for a completed Jules session."
+prompt = "Use the jules_audit_report tool for the specified taskId to create a .jclaw.md report in the .jules/audit/ folder. Argument: {{args}}"

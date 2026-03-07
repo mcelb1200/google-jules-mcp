@@ -1,0 +1,23 @@
+{
+  "name": "jclaw",
+  "version": "1.0.0",
+  "description": "JCLAW (Jules Crustacean Logic & Automated Workflow): An MCP server for high-level Jules orchestration using the Lobster pattern.",
+  "mcpServers": {
+    "jclaw": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "HEADLESS": "true",
+        "SESSION_MODE": "browserbase"
+      }
+    }
+  },
+  "commands": {
+    "jules:delegate": "commands/jules/delegate.toml",
+    "jules:status": "commands/jules/status.toml",
+    "jules:audit": "commands/jules/audit.toml",
+    "jules:conclude": "commands/jules/conclude.toml",
+    "jules:review": "commands/jules/review.toml",
+    "jules:feedback": "commands/jules/feedback.toml"
+  }
+}

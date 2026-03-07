@@ -1,0 +1,2 @@
+description = "List currently active Jules tasks and their progress."
+prompt = "Use the jules_list_tasks tool with status='active' to list all current Jules tasks for this repository. Argument: {{args}}"

@@ -1,0 +1,2 @@
+description = "Delegate a task to Jules using the Lobster pattern. Use @jules markers or .jules/ instructions."
+prompt = "Use the jules_delegate_task tool to initiate a task delegation. If no instruction is provided, search the codebase for @jules markers or look in the .jules/backlog/ directory. Argument: {{args}}"

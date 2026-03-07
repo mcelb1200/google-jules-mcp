@@ -1,0 +1,2 @@
+description = "Finalize a Jules session (status: completed or incomplete)."
+prompt = "Use the jules_conclude_task tool to archive the session instructions. Status should be 'completed' or 'incomplete'. Argument: {{args}}"

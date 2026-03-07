@@ -1,0 +1,2 @@
+description = "Extract the most recent code review reasoning from a Jules session."
+prompt = "Use the jules_code_review tool to retrieve the verification analysis and reasoning for the given taskId. Argument: {{args}}"
