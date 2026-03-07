@@ -271,6 +271,14 @@ export class GoogleJulesMCP {
                   type: 'boolean',
                   description: 'Whether to push the current branch to origin before initiating task (default: true)',
                 },
+                instruction: {
+                  type: 'string',
+                  description: 'Full instruction text for Jules (overrides markers and instructionFile).',
+                },
+                instructionFile: {
+                  type: 'string',
+                  description: 'Path to a markdown file containing detailed instructions (e.g., .jules/active/task.md).',
+                },
               }
             },
           },
@@ -1457,7 +1465,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async initiateDelegation(args: any) {
-    let { repository, branch, marker = "@jules", pushFirst = true } = args;
+    let { repository, branch, marker = "@jules", pushFirst = true, instruction, instructionFile } = args;
 
     // Auto-detect context if missing
     if (!repository || !branch) {
@@ -1483,16 +1491,69 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       }
     }
 
-    // Step 2: Initiate Jules Task
-    // Prompt specifically designed for delegated tasks
-    const prompt = `I have added code markers starting with '${marker}' in this branch. Please scan the repository, find these markers, and implement the requested changes for each one. Once found, remove the markers as you implement the fixes.`;
+    // Step 2: Determine Prompt (Tiered Strategy)
+    let finalPrompt = instruction;
+    let strategy = "marker-based";
+
+    // 1. Check for explicit raw instruction
+    if (finalPrompt) {
+      strategy = "explicit instruction text";
+    }
+
+    // 2. Check for explicit instruction file
+    if (!finalPrompt && instructionFile) {
+      try {
+        const fullPath = path.resolve(process.cwd(), instructionFile);
+        finalPrompt = await fs.readFile(fullPath, "utf8");
+        strategy = `instruction file: ${instructionFile}`;
+      } catch (error: any) {
+        results.push(`⚠ Could not read explicit instruction file ${instructionFile}: ${error.message}`);
+      }
+    }
+
+    // 3. Auto-detect convention-based instruction file (Brain/Muscles pattern)
+    if (!finalPrompt && branch) {
+      const branchesToTry = [
+        branch,
+        branch.replace(/\//g, "-"), // Handle feature/foo as feature-foo
+        branch.split("/").pop() || branch // Handle feature/foo as foo
+      ];
+
+      const conventionPaths = branchesToTry.flatMap(b => [
+        `.jules/active/${b}.md`,
+        `.jules/active/${b}/task.md`,
+        `instructions.md`
+      ]);
+
+      for (const p of conventionPaths) {
+        try {
+          const fullPath = path.resolve(process.cwd(), p);
+          const content = await fs.readFile(fullPath, "utf8");
+          if (content && content.trim().length > 0) {
+            finalPrompt = content;
+            strategy = `auto-detected: ${p}`;
+            break;
+          }
+        } catch (e) {
+          // Continue to next path
+        }
+      }
+    }
+
+    // 4. Fallback to marker prompt
+    if (!finalPrompt) {
+      finalPrompt = `I have added code markers starting with '${marker}' in this branch. Please scan the repository, find these markers, and implement the requested changes for each one. Once found, remove the markers as you implement the fixes.`;
+      strategy = `marker-based (${marker})`;
+    }
+
+    results.push(`ℹ Delegation Strategy: ${strategy}`);
 
     try {
       let taskResult;
-      // REST API is more reliable for direct prompts
+      // REST API is more reliable for long prompts (Muscles pattern)
       if (this.config.julesApiKey) {
         taskResult = await this.createTaskViaApi({
-          description: prompt,
+          description: finalPrompt,
           repository,
           branch,
           type: "delegated",
@@ -1502,19 +1563,19 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       } else {
         // Fallback to CLI
         taskResult = await this.createTaskViaCli({
-          description: prompt,
+          description: finalPrompt,
           repository,
           type: "delegated",
           marker
         });
-        results.push(`✓ Jules task initiated via CLI (Note: CLI may use default branch unless remote VM is pre-synced).`);
+        results.push(`✓ Jules task initiated via CLI (Note: Large prompts may be truncated).`);
       }
 
       return {
         content: [
           {
             type: "text",
-            text: `Delegation Initiation Results:\n\n${results.join("\n")}\n\nJules is now scanning your branch for '${marker}' markers.`
+            text: `Delegation Results:\n\n${results.join("\n")}\n\nJules is now operating on your plan.`
           }
         ]
       };
