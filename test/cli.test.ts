@@ -20,7 +20,7 @@ vi.mock('child_process', () => {
 
 describe('CLI Tier Tests', () => {
   let mcp: any;
-  const tempDir = path.join(os.tmpdir(), 'jules-mcp-test-cli');
+  const tempDir = path.join(os.tmpdir(), 'jclaw-test-cli');
 
   beforeEach(async () => {
     vi.stubEnv('NODE_ENV', 'test');

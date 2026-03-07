@@ -10,7 +10,7 @@ This directory contains the Docker setup for running the Google Jules MCP server
 ## Building the Image
 
 ```bash
-docker build -t google-jules-mcp .
+docker build -t JCLAW .
 ```
 
 ## Running the Container
@@ -44,7 +44,7 @@ docker run -i \
   -v /path/to/your/project:/projects \
   -e JULES_API_KEY=your_api_key \
   -e SESSION_MODE=fresh \
-  google-jules-mcp
+  JCLAW
 ```
 
 ## IDE Integration
@@ -57,7 +57,7 @@ Edit your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "google-jules": {
+    "jclaw": {
       "command": "docker",
       "args": [
         "run",
@@ -67,7 +67,7 @@ Edit your `claude_desktop_config.json`:
         "/absolute/path/to/your/project:/projects",
         "-e",
         "JULES_API_KEY=your_key_here",
-        "google-jules-mcp"
+        "JCLAW"
       ]
     }
   }
@@ -78,7 +78,7 @@ Edit your `claude_desktop_config.json`:
 ### 2. VS Code (Generic MCP Extension)
 If your extension supports variable expansion (like `${workspaceFolder}`), point it to the wrapper script:
 
-*   **Command:** `path/to/google-jules-mcp/scripts/run_docker.bat` (or `.sh`)
+*   **Command:** `path/to/JCLAW/scripts/run_docker.bat` (or `.sh`)
 *   **Args:** `${workspaceFolder}`
 
 ## Configuration

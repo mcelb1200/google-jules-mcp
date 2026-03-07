@@ -41,7 +41,7 @@ docker run -i --rm ^
   -e BROWSERBASE_API_KEY=%BROWSERBASE_API_KEY% ^
   -e BROWSERBASE_PROJECT_ID=%BROWSERBASE_PROJECT_ID% ^
   -e GOOGLE_AUTH_COOKIES=%GOOGLE_AUTH_COOKIES% ^
-  -e CHROME_USER_DATA_DIR=/root/.jules-mcp/browser-data ^
-  google-jules-mcp
+  -e CHROME_USER_DATA_DIR=/root/.jclaw/browser-data ^
+  JCLAW
 
 endlocal

@@ -61,7 +61,7 @@ $EnvVars = @(
 
 $DockerArgs = @("run", "-i", "--rm")
 $DockerArgs += "-v", "$($AbsWorkspacePath):/projects"
-$DockerArgs += "-e", "CHROME_USER_DATA_DIR=/root/.jules-mcp/browser-data"
+$DockerArgs += "-e", "CHROME_USER_DATA_DIR=/root/.jclaw/browser-data"
 
 foreach ($Var in $EnvVars) {
     if (Test-Path "env:$Var") {
@@ -70,7 +70,7 @@ foreach ($Var in $EnvVars) {
     }
 }
 
-$DockerArgs += "google-jules-mcp"
+$DockerArgs += "JCLAW"
 
 # Run Docker command
 Write-Host "Running Google Jules MCP for workspace: $AbsWorkspacePath"

@@ -78,7 +78,7 @@ interface SourceFile {
   status: 'modified' | 'created' | 'deleted' | 'unchanged';
 }
 
-export class GoogleJulesMCP {
+export class JCLAW {
   public server: Server;
   private browser: Browser | null = null;
   private page: Page | null = null;
@@ -90,7 +90,7 @@ export class GoogleJulesMCP {
       headless: process.env.HEADLESS !== 'false',
       timeout: parseInt(process.env.TIMEOUT || '30000'),
       debug: process.env.DEBUG === 'true',
-      dataPath: process.env.JULES_DATA_PATH || path.join(os.homedir(), '.jules-mcp', 'data.json'),
+      dataPath: process.env.JULES_DATA_PATH || path.join(os.homedir(), '.jclaw', 'data.json'),
       baseUrl: 'https://jules.google.com',
       userDataDir: process.env.CHROME_USER_DATA_DIR,
       useExistingSession: process.env.USE_EXISTING_SESSION === 'true',
@@ -112,7 +112,7 @@ export class GoogleJulesMCP {
 
     this.server = new Server(
       {
-        name: 'google-jules-mcp',
+        name: 'jclaw',
         version: '1.0.0',
       },
       {
@@ -282,6 +282,10 @@ export class GoogleJulesMCP {
                 instructionFile: {
                   type: 'string',
                   description: 'Path to a markdown file containing detailed instructions (e.g., .jules/active/task.md).',
+                },
+                respectIgnoreFiles: {
+                  type: 'boolean',
+                  description: 'Whether to respect .jclaw-ignore, .gitignore, and standard ignore patterns.',
                 },
               }
             },
@@ -874,7 +878,7 @@ Once authenticated:
 
 ### SMITHERY DEPLOYMENT:
 For Smithery users:
-1. Fork the google-jules-mcp repository
+1. Fork the JCLAW repository
 2. Deploy to Smithery with Browserbase environment variables
 3. The MCP will automatically handle remote browser management
 4. Access from any Claude Code instance globally
@@ -963,13 +967,13 @@ CHROME_USER_DATA_DIR=/path/to/chrome/profile
 \`\`\`
 SESSION_MODE=cookies
 GOOGLE_AUTH_COOKIES="session_id=...; domain=.google.com"
-COOKIES_PATH=~/.jules-mcp/cookies.json
+COOKIES_PATH=~/.jclaw/cookies.json
 \`\`\`
 
 **Persistent:**
 \`\`\`
 SESSION_MODE=persistent
-CHROME_USER_DATA_DIR=~/.jules-mcp/browser-data
+CHROME_USER_DATA_DIR=~/.jclaw/browser-data
 \`\`\`
 
 ### VALIDATION CHECKLIST:
@@ -1295,7 +1299,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         const pages = context.pages();
         this.page = pages.length > 0 ? pages[0] : await context.newPage();
       } else if (this.config.sessionMode === 'persistent') {
-        const persistentDir = this.config.userDataDir || path.join(os.homedir(), '.jules-mcp', 'browser-data');
+        const persistentDir = this.config.userDataDir || path.join(os.homedir(), '.jclaw', 'browser-data');
         const context = await chromium.launchPersistentContext(persistentDir, {
           headless: this.config.headless,
           timeout: this.config.timeout,
@@ -1480,6 +1484,34 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     }
   }
 
+  private async runGhCommand(args: string[]): Promise<string> {
+    const execPromise = promisify(exec);
+    const command = `gh ${args.join(" ")}`;
+    try {
+      console.error(`Executing GH command: ${command}`);
+      const { stdout } = await execPromise(command);
+      return stdout.trim();
+    } catch (error: any) {
+      throw new Error(`GH Error: ${error.message}`);
+    }
+  }
+
+  private async verifyRemoteInstructionFile(repository: string, branch: string, filePath: string): Promise<boolean> {
+    try {
+      console.error(`Verifying remote existence: ${repository}/${branch}/${filePath}`);
+      // Use gh api to check contents
+      const result = await this.runGhCommand([
+        "api",
+        `/repos/${repository}/contents/${filePath}?ref=${branch}`,
+        "--jq",
+        ".name"
+      ]);
+      return !!result;
+    } catch (e) {
+      return false;
+    }
+  }
+
   private async detectGitContext() {
     try {
       // Get remote URL to extract owner/repo
@@ -1621,8 +1653,67 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     results.push(`ℹ Delegation Strategy: ${strategy}`);
 
-    // Step 4: Final Prompt Prep (Inject Task Identifier)
-    const decoratedPrompt = taskId ? `Task: [${taskId}]\n\n${finalPrompt}` : finalPrompt;
+    // Step 2.5: Remote Consistency Verification (Brain requirement)
+    if (instructionFileToMove || (strategy.includes("instruction file"))) {
+      const remotePath = instructionFileToMove || instructionFile;
+      if (remotePath) {
+        results.push(`⏳ Verifying remote consistency for ${remotePath}...`);
+        const isRemote = await this.verifyRemoteInstructionFile(repository, branch, remotePath);
+        if (isRemote) {
+          results.push(`✓ Remote consistency confirmed via GH API.`);
+        } else {
+          results.push(`⚠ WARNING: Instruction file ${remotePath} NOT found on remote branch '${branch}'. Jules may fail to initiate.`);
+          // Try a last-ditch push if we haven't already
+          if (!pushFirst) {
+             results.push(`ℹ Attempting last-ditch push...`);
+             try { await this.runGitCommand(["push", "origin", branch]); } catch (e) {}
+          }
+        }
+      }
+    }
+
+    // Step 3: Optional Ignore Handling (JCLAW Prioritization)
+    let jclawIgnore: string[] = [];
+    let standardIgnore: string[] = [];
+
+    if (args.respectIgnoreFiles !== false) {
+      // Primary Shield
+      try {
+        const content = await fs.readFile(path.resolve(process.cwd(), ".jclaw-ignore"), "utf8");
+        const lines = content.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+        if (lines.length > 0) {
+          jclawIgnore = lines;
+          results.push(`✓ Including JCLAW Primary Shield (.jclaw-ignore)`);
+        }
+      } catch (e) {}
+
+      // Secondary Shields
+      const secondaryFiles = [".gitignore", ".cursorignore", ".dockerignore"];
+      for (const f of secondaryFiles) {
+        try {
+          const content = await fs.readFile(path.resolve(process.cwd(), f), "utf8");
+          const lines = content.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+          if (lines.length > 0) {
+            // Add lines not already in jclawIgnore
+            const newLines = lines.filter(l => !jclawIgnore.includes(l));
+            if (newLines.length > 0) {
+              standardIgnore.push(...newLines);
+              results.push(`✓ Including secondary rules from ${f}`);
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Header-based priority
+    const allIgnore = [...jclawIgnore, ...standardIgnore];
+
+    // Step 4: Final Prompt Prep (Inject Task Identifier and Ignores)
+    let ignoreInstruction = allIgnore.length > 0
+      ? `\n\n### 🛡️ Restricted Files (DO NOT MODIFY):\n${allIgnore.map(p => `- ${p}`).join("\n")}`
+      : "";
+
+    const decoratedPrompt = (taskId ? `Task: [${taskId}]\n\n${finalPrompt}` : finalPrompt) + ignoreInstruction;
     const taskTitle = taskId ? `${activeTaskId} [${taskId}]` : activeTaskId;
 
     try {
@@ -1669,7 +1760,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         content: [
           {
             type: "text",
-            text: `Delegation Results:\n\n${results.join("\n")}\n\nJules is now operating on your plan.`
+            text: `Results [Delegation]:\n${results.join("\n")}\n\n--- 🦞 JCLAW Conclusion ---\nThe pincer has snapped (snap!) shut on the target branch. Jules has been unleashed into the Binary Reef.`
           }
         ]
       };
@@ -2659,7 +2750,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       try {
         const auditDir = path.resolve(process.cwd(), ".jules/audit");
         await fs.mkdir(auditDir, { recursive: true });
-        const fileName = `${actualTaskId}.audit.md`;
+        const fileName = `${actualTaskId}.jclaw.md`;
         const auditFile = path.join(auditDir, fileName);
         await fs.writeFile(auditFile, report, "utf8");
         localPath = `.jules/audit/${fileName}`;
@@ -2671,7 +2762,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
       return {
         content: [{
           type: "text",
-          text: (localPath ? `✅ Audit report recorded to ${localPath}\n\n` : "") + report
+          text: (localPath ? `✅ Audit recorded: ${localPath}\n\n` : "") +
+                report +
+                "\n\n--- 🦞 JCLAW Conclusion ---\nThe reef is secure; this session's history is now safely encased in a JCLAW audit shell."
         }]
       };
     } catch (error: any) {
@@ -2754,7 +2847,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     return {
       content: [{
         type: "text",
-        text: `Conclusion Results for Task ${actualTaskId}:\n\n${results.join("\n")}`
+        text: `Results [Task ${actualTaskId}]:\n${results.join("\n")}\n\n--- 🦞 JCLAW Conclusion ---\nThe pincer has released. The workflow has been successfully molted into its next state.`
       }]
     };
   }
@@ -3016,9 +3109,14 @@ Perfect for cloud deployment! Here's why:
 **Configuration:**
 \`\`\`bash
 SESSION_MODE=browserbase
-BROWSERBASE_API_KEY=bb_live_g3i-b4WPFh__E3cErKE5rO-jWds
-BROWSERBASE_PROJECT_ID=d718e85f-be7b-497d-9123-b1bbf798f1bb
-\`\`\``;
+BROWSERBASE_API_KEY=your_key
+BROWSERBASE_PROJECT_ID=your_id
+\`\`\`
+
+🌊 **DEEP SEA MODE (LORE)**
+In the deepest trenches of technical debt, the Crimson Orchestrator (JCLAW) uses its heavy brass gears to guide the relentless Muscles (Jules). By delegating tasks to Jules, you aren't just refactoring code—you're releasing a force of nature into the Binary Reef. The recursive nature of JCLAW ensures that every molt (refactor) results in a stronger, sleeker codebase.
+
+*Welcome to the Abyss. The Pincer is ready.*`;
 
       nextSteps = [
         'Read jules://prompts/browserbase-setup for detailed setup',
@@ -3069,7 +3167,7 @@ Best for multi-machine portability:
 \`\`\`bash
 SESSION_MODE=cookies
 GOOGLE_AUTH_COOKIES="session_id=abc123; domain=.google.com; auth_token=xyz789; domain=.google.com"
-COOKIES_PATH=~/.jules-mcp/cookies.json
+COOKIES_PATH=~/.jclaw/cookies.json
 \`\`\``;
 
       nextSteps = [
@@ -3093,7 +3191,7 @@ Maximum reliability and control:
 **Configuration:**
 \`\`\`bash
 SESSION_MODE=persistent
-CHROME_USER_DATA_DIR=~/.jules-mcp/browser-data
+CHROME_USER_DATA_DIR=~/.jclaw/browser-data
 \`\`\``;
 
       nextSteps = [
@@ -3191,7 +3289,7 @@ if (process.env.NODE_ENV !== 'test') {
   });
 
   // Start the server
-  const server = new GoogleJulesMCP();
+  const server = new JCLAW();
   server.run().catch((error) => {
     console.error('Failed to start server:', error);
     process.exit(1);

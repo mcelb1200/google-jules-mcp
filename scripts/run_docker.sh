@@ -55,5 +55,5 @@ done
 docker run -i --rm \
   "${ENV_ARGS[@]}" \
   -v "$ABS_WORKSPACE_PATH:/projects" \
-  -e CHROME_USER_DATA_DIR="/root/.jules-mcp/browser-data" \
-  google-jules-mcp
+  -e CHROME_USER_DATA_DIR="/root/.jclaw/browser-data" \
+  JCLAW

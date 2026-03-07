@@ -1,7 +1,7 @@
 {
   "claude_desktop_config": {
     "mcpServers": {
-      "google-jules": {
+      "jclaw": {
         "command": "docker",
         "args": [
           "run",
@@ -13,7 +13,7 @@
           "JULES_API_KEY=your_key_here",
           "-e",
           "SESSION_MODE=fresh",
-          "google-jules-mcp"
+          "JCLAW"
         ]
       }
     }

@@ -1,5 +1,5 @@
 mcpServers:
-  google-jules-mcp:
+  jclaw:
     command: node
     args:
       - dist/index.js
@@ -59,8 +59,8 @@ mcpServers:
           default: "false"
           description: "Whether to use existing session data"
       required: []
-    description: "MCP server for Google Jules automation with comprehensive session management - supports local Chrome profiles, cookie persistence, and remote Browserbase sessions for seamless Google authentication"
-    homepage: "https://github.com/samihalawa/google-jules-mcp"
+    description: "JCLAW (Jules Crustacean Logic & Automated Workflow): An MCP server for high-level Jules orchestration using the Lobster pattern."
+    homepage: "https://github.com/mcelb1200/JCLAW"
     license: "MIT"
     keywords:
       - jules

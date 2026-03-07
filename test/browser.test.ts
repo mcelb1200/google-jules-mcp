@@ -18,7 +18,7 @@ describe('Browser Tier Tests', () => {
   let mockPage: any;
   let mockContext: any;
   let mockBrowser: any;
-  const tempDir = path.join(os.tmpdir(), 'jules-mcp-test-browser');
+  const tempDir = path.join(os.tmpdir(), 'jclaw-test-browser');
 
   beforeEach(async () => {
     vi.stubEnv('NODE_ENV', 'test');

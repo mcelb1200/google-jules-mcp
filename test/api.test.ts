@@ -10,7 +10,7 @@ const mockedAxios = vi.mocked(axios);
 
 describe('API Tier Tests', () => {
   let mcp: any;
-  const tempDir = path.join(os.tmpdir(), 'jules-mcp-test-api');
+  const tempDir = path.join(os.tmpdir(), 'jclaw-test-api');
 
   beforeEach(async () => {
     vi.stubEnv('NODE_ENV', 'test');

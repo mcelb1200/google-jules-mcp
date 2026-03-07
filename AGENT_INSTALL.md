@@ -1,4 +1,6 @@
-# 🤖 AI Agent Setup Guide: Google Jules MCP
+# 🤖 AI Agent Setup Guide: JCLAW (Jules Crustacean Logic & Automated Workflow)
+
+![JCLAW Logo](assets/logo.png)
 
 This guide is designed for an AI agent (like Antigravity, Claude, or Cursor) to quickly install, configure, and utilize this MCP server in a new environment.
 
@@ -8,8 +10,8 @@ Run these commands to clone, build, and prepare the server:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/mcelb1200/google-jules-mcp.git
-cd google-jules-mcp
+git clone https://github.com/mcelb1200/JCLAW.git
+cd JCLAW
 
 # 2. Install dependencies
 npm install
@@ -39,9 +41,9 @@ Add this entry to your `mcpConfig` (e.g., `claude_desktop_config.json` or `.curs
 ```json
 {
   "mcpServers": {
-    "google-jules-mcp": {
+    "JCLAW": {
       "command": "node",
-      "args": ["/absolute/path/to/google-jules-mcp/dist/index.js"],
+      "args": ["/absolute/path/to/JCLAW/dist/index.js"],
       "env": {
         "JULES_API_KEY": "your_api_key_here",
         "JULES_CLI_PATH": "jules",
@@ -66,7 +68,7 @@ Before using `jules_delegate_task`, ensure the following directory structure exi
 .jules/
 ├── backlog/   # Pending instruction files (e.g. feature-A.md)
 ├── active/    # Currently executing instructions
-├── audit/     # Recorded audit reports ([sessionID].audit.md)
+├── audit/     # Recorded audit reports ([sessionID].jclaw.md)
 └── logs/      # Local execution logs
 ```
 
@@ -95,7 +97,7 @@ The `jules_delegate_task` tool uses a **Tiered Logic** to find Jules' instructio
   - `incomplete`: Archives as `.incomplete.md` and generates a new `.jules/backlog/` task for residual work.
 - **`jules_check_feedback`**: Run this periodically to see if Jules is blocked in `AWAITING_USER_FEEDBACK`. It retrieves the exact question from Jules.
 - **`jules_analyze_code`**: Use `returnPatch: true` to salvage a unified Git patch from any session (even failed ones).
-- **`jules_audit_report`**: Generates a consolidated Markdown audit report including intent, activity logs, code outcomes, and most recent code review reasoning.
+- **`jules_audit_report`**: Generates a consolidated Markdown audit report (.jclaw.md) including intent, activity logs, code outcomes, and most recent code review reasoning.
 - **`jules_code_review`**: Specifically extracts the last code review/merge assessment from Jules sessions for quick auditing.
 - **`jules_list_tasks`**: Filters by the current repository automatically across all branches.
 
