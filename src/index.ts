@@ -1625,25 +1625,45 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
     results.push(`ℹ Delegation Strategy: ${strategy}`);
 
-    // Step 3: Optional Ignore Handling
-    let ignorePatterns = [];
+    // Step 3: Optional Ignore Handling (JCLAW Prioritization)
+    let jclawIgnore: string[] = [];
+    let standardIgnore: string[] = [];
+
     if (args.respectIgnoreFiles !== false) {
-      const ignoreFiles = [".jclaw-ignore", ".gitignore", ".cursorignore", ".dockerignore"];
-      for (const f of ignoreFiles) {
+      // Primary Shield
+      try {
+        const content = await fs.readFile(path.resolve(process.cwd(), ".jclaw-ignore"), "utf8");
+        const lines = content.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+        if (lines.length > 0) {
+          jclawIgnore = lines;
+          results.push(`✓ Including JCLAW Primary Shield (.jclaw-ignore)`);
+        }
+      } catch (e) {}
+
+      // Secondary Shields
+      const secondaryFiles = [".gitignore", ".cursorignore", ".dockerignore"];
+      for (const f of secondaryFiles) {
         try {
           const content = await fs.readFile(path.resolve(process.cwd(), f), "utf8");
           const lines = content.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
           if (lines.length > 0) {
-            ignorePatterns.push(...lines);
-            results.push(`✓ Including ignore rules from ${f}`);
+            // Add lines not already in jclawIgnore
+            const newLines = lines.filter(l => !jclawIgnore.includes(l));
+            if (newLines.length > 0) {
+              standardIgnore.push(...newLines);
+              results.push(`✓ Including secondary rules from ${f}`);
+            }
           }
         } catch (e) {}
       }
     }
 
+    // Header-based priority
+    const allIgnore = [...jclawIgnore, ...standardIgnore];
+
     // Step 4: Final Prompt Prep (Inject Task Identifier and Ignores)
-    let ignoreInstruction = ignorePatterns.length > 0
-      ? `\n\n### 🛡️ Restricted Files (DO NOT MODIFY):\n${ignorePatterns.map(p => `- ${p}`).join("\n")}`
+    let ignoreInstruction = allIgnore.length > 0
+      ? `\n\n### 🛡️ Restricted Files (DO NOT MODIFY):\n${allIgnore.map(p => `- ${p}`).join("\n")}`
       : "";
 
     const decoratedPrompt = (taskId ? `Task: [${taskId}]\n\n${finalPrompt}` : finalPrompt) + ignoreInstruction;
