@@ -301,6 +301,33 @@ export class GoogleJulesMCP {
             },
           },
           {
+            name: 'jules_conclude_task',
+            description: 'Finalizes a Jules session by archiving instructions. Handles completed and incomplete transitions.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                taskId: {
+                  type: 'string',
+                  description: 'Jules Task ID or shorthand (e.g. branch name).',
+                },
+                status: {
+                  type: 'string',
+                  enum: ['completed', 'incomplete'],
+                  description: 'Outcome status of the session.',
+                },
+                remainingWork: {
+                  type: 'string',
+                  description: 'If incomplete, describe the remaining work to be re-issued to the backlog.',
+                },
+                residualTaskId: {
+                  type: 'string',
+                  description: 'Optional name for the re-issued backlog file (defaults to [taskId]-residual).',
+                },
+              },
+              required: ['taskId', 'status'],
+            },
+          },
+          {
             name: 'jules_code_review',
             description: 'Extracts the most recent code review or reasoning analysis from a Jules session. Provides insights into Jules decisions and verification ratings.',
             inputSchema: {
@@ -490,6 +517,8 @@ export class GoogleJulesMCP {
             return await this.checkFeedback(args);
           case 'jules_audit_report':
             return await this.generateAuditReport(args);
+          case 'jules_conclude_task':
+            return await this.concludeTask(args);
           case 'jules_code_review':
             return await this.getCodeReview(args);
           case 'jules_delegate_task':
@@ -2648,6 +2677,86 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     } catch (error: any) {
       throw new Error(`Audit Report Generation Failed: ${error.message}`);
     }
+  }
+
+  private async concludeTask(args: any) {
+    const { taskId, status, remainingWork, residualTaskId } = args;
+    const actualTaskId = this.extractTaskId(taskId);
+    const activeDir = path.resolve(process.cwd(), ".jules/active");
+    const archiveDir = path.resolve(process.cwd(), ".jules/archive");
+    const backlogDir = path.resolve(process.cwd(), ".jules/backlog");
+
+    let results = [];
+    let sourceFile = "";
+
+    // 1. Locate the instruction file in active/
+    const possibleNames = taskId ? [taskId, `${taskId}.md`] : [];
+    try {
+      const detected = await this.detectGitContext();
+      if (detected.branch) {
+        possibleNames.push(detected.branch, `${detected.branch}.md`, detected.branch.replace(/\//g, "-") + ".md");
+      }
+    } catch (e) {}
+
+    for (const name of possibleNames) {
+      const p = path.join(activeDir, name.endsWith(".md") ? name : `${name}.md`);
+      try {
+        await fs.access(p);
+        sourceFile = p;
+        break;
+      } catch (e) {}
+    }
+
+    if (!sourceFile) {
+      try {
+        const files = await fs.readdir(activeDir);
+        const found = files.find(f => f.includes(actualTaskId));
+        if (found) sourceFile = path.join(activeDir, found);
+      } catch (e) {}
+    }
+
+    if (!sourceFile) {
+      results.push(`⚠ Could not find instruction file for ${actualTaskId} in .jules/active/. Archiving file movement skipped.`);
+    }
+
+    // 2. Perform Movement
+    try {
+      await fs.mkdir(archiveDir, { recursive: true });
+      if (sourceFile) {
+        const baseName = path.basename(sourceFile);
+        const targetName = status === 'completed' ? baseName : `${actualTaskId}.incomplete.md`;
+        const targetPath = path.join(archiveDir, targetName);
+
+        if (status === 'incomplete' && remainingWork) {
+          const residualName = residualTaskId || `${actualTaskId}-residual`;
+          const residualFile = `${residualName}.md`;
+
+          // Append reference before moving
+          const content = await fs.readFile(sourceFile, "utf8");
+          const updatedContent = `${content}\n\n### 🔄 Residual Reference\nThis task was incomplete. Remaining work is re-issued to: \`.jules/backlog/${residualFile}\``;
+          await fs.writeFile(sourceFile, updatedContent, "utf8");
+
+          // Create backlog file
+          await fs.mkdir(backlogDir, { recursive: true });
+          const backlogPath = path.join(backlogDir, residualFile);
+          const backlogContent = `## Task: ${residualName} (Residual)\n**Original Session**: ${actualTaskId}\n\n### Remaining Work\n${remainingWork}`;
+          await fs.writeFile(backlogPath, backlogContent, "utf8");
+          results.push(`✓ Re-issued remaining work to .jules/backlog/${residualFile}`);
+        }
+
+        await fs.rename(sourceFile, targetPath);
+        results.push(`✓ Archived: .jules/active/${baseName} -> .jules/archive/${targetName}`);
+      }
+    } catch (e: any) {
+      results.push(`⚠ Error during file operations: ${e.message}`);
+    }
+
+    return {
+      content: [{
+        type: "text",
+        text: `Conclusion Results for Task ${actualTaskId}:\n\n${results.join("\n")}`
+      }]
+    };
   }
 
   private extractCodeReviewFromActivities(activities: any[]): string | undefined {

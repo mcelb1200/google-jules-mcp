@@ -86,9 +86,13 @@ The `jules_delegate_task` tool uses a **Tiered Logic** to find Jules' instructio
 3. **Monitor**: Periodically check `jules_check_feedback`.
 4. **Audit**: Once complete, run `jules_audit_report`. The report is automatically saved to `.jules/audit/`.
 5. **Synthesis**: Review the Jules PR and merge using the recorded audit for traceability.
+6. **Conclude**: Run `jules_conclude_task`. It automatically archives instructions and can re-issue remaining work to the `.jules/backlog/` if the session was `incomplete`.
 
 ## 🔍 Monitoring & Salvaging
 
+- **`jules_conclude_task`**: Finalizes the session.
+  - `completed`: Moves instruction to `.jules/archive/`.
+  - `incomplete`: Archives as `.incomplete.md` and generates a new `.jules/backlog/` task for residual work.
 - **`jules_check_feedback`**: Run this periodically to see if Jules is blocked in `AWAITING_USER_FEEDBACK`. It retrieves the exact question from Jules.
 - **`jules_analyze_code`**: Use `returnPatch: true` to salvage a unified Git patch from any session (even failed ones).
 - **`jules_audit_report`**: Generates a consolidated Markdown audit report including intent, activity logs, code outcomes, and most recent code review reasoning.
