@@ -2916,16 +2916,17 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
   private async bulkCreateTasks(args: any) {
     const { tasks } = args;
-    const results = [];
 
-    for (const taskData of tasks) {
-      try {
-        const result = await this.createTask(taskData);
-        results.push(`✓ ${taskData.repository}: ${taskData.description.slice(0, 50)}...`);
-      } catch (error) {
-        results.push(`✗ ${taskData.repository}: Failed - ${error}`);
-      }
-    }
+    const results = await Promise.all(
+      tasks.map(async (taskData: any) => {
+        try {
+          await this.createTask(taskData);
+          return `✓ ${taskData.repository}: ${taskData.description.slice(0, 50)}...`;
+        } catch (error) {
+          return `✗ ${taskData.repository}: Failed - ${error}`;
+        }
+      })
+    );
 
     return {
       content: [
