@@ -18,16 +18,18 @@ These scripts are designed for token-efficient, long-running orchestration by an
 ### Tier 2: Workflow Orchestration (The Brain)
 *These skills handle the lifecycle, feedback loop, and verification of tasks.*
 
+- [**Wait For Task**](wait_for_task.md): Block and poll efficiently until Jules requires interaction or finishes.
 - [**Check Feedback**](check_feedback.md): Scan tasks for `AWAITING_USER_FEEDBACK` status.
 - [**Approve Plan**](approve_plan.md): Approve a generated execution plan.
 - [**Resume Task**](resume_task.md): Resume a paused session.
 - [**Audit Report**](audit_report.md): Generate a formal audit report for a session.
 - [**Conclude Task**](conclude_task.md): Finalize a session (completed or incomplete) and archive instructions.
 - [**Code Review**](code_review.md): Extract the latest code review from a session's history.
-- [**Auto Review**](auto_review.md): Programmatically lint, auto-fix, and send code quality feedback to a session.
+- [**Auto Review**](auto_review.md): Programmatically lint, auto-fix, and autonomously retry code quality feedback.
 
 ### Tier 3: Advanced Utility
 *Scripts for specific, complex scenarios or bulk operations.*
 
-- [**Analyze Code**](analyze_code.md): Retrieve code changes and diffs from a session.
+- [**Summarize Changes**](summarize_changes.md): Token-efficient diff and commit summary.
+- [**Analyze Code**](analyze_code.md): Retrieve code changes and diffs from a session's artifact history.
 - [**Setup**](setup.md): Initialize environment variables and CLI tools.

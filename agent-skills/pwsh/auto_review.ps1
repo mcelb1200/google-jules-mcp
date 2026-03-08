@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory=$true)][string]$TaskId,
     [Parameter(Mandatory=$true)][string]$Branch,
     [Parameter(Mandatory=$true)][string]$FixCommand,
-    [Parameter(Mandatory=$true)][string]$LintCommand
+    [Parameter(Mandatory=$true)][string]$LintCommand,
+    [int]$MaxRetries=1
 )
 
 $Dir = Split-Path $MyInvocation.MyCommand.Path
@@ -10,7 +11,6 @@ $Dir = Split-Path $MyInvocation.MyCommand.Path
 
 Write-Host "=== Automated Code Review ===" -ForegroundColor Cyan
 
-# Get current branch
 $CurrentBranch = (git rev-parse --abbrev-ref HEAD).Trim()
 $StashNeeded = $false
 
@@ -21,38 +21,50 @@ if ($DiffExitCode -ne 0) {
     $StashNeeded = $true
 }
 
-Write-Host "ℹ Fetching remote branch: $Branch" -ForegroundColor Cyan
-git fetch origin $Branch | Out-Null
+$RetryCount = 0
 
-git checkout $Branch | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "✗ Failed to checkout branch $Branch. Does it exist locally or on origin?" -ForegroundColor Red
-    if ($StashNeeded) { git stash pop | Out-Null }
-    exit 1
-}
+while ($RetryCount -le $MaxRetries) {
+    Write-Host "--- Attempt $($RetryCount + 1) of $($MaxRetries + 1) ---" -ForegroundColor Cyan
 
-Write-Host "ℹ Pulling latest changes from origin..." -ForegroundColor Cyan
-git pull origin $Branch | Out-Null
+    Write-Host "ℹ Fetching remote branch: $Branch" -ForegroundColor Cyan
+    git fetch origin $Branch | Out-Null
 
-Write-Host "ℹ Running fix command: $FixCommand" -ForegroundColor Cyan
-Invoke-Expression $FixCommand | Out-Null
+    git checkout $Branch | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "✗ Failed to checkout branch $Branch. Does it exist locally or on origin?" -ForegroundColor Red
+        break
+    }
 
-Write-Host "ℹ Running lint command: $LintCommand" -ForegroundColor Cyan
-$LintOutput = ""
-try {
-    $LintOutput = Invoke-Expression $LintCommand 2>&1 | Out-String
-    $LintExitCode = $LASTEXITCODE
-} catch {
-    $LintOutput = $_.Exception.Message
-    $LintExitCode = 1
-}
+    Write-Host "ℹ Pulling latest changes from origin..." -ForegroundColor Cyan
+    git pull origin $Branch | Out-Null
 
-if ($LintExitCode -ne 0) {
-    Write-Host "✗ Code quality issues found. Preparing feedback for Jules session..." -ForegroundColor Yellow
+    Write-Host "ℹ Running fix command: $FixCommand" -ForegroundColor Cyan
+    Invoke-Expression $FixCommand | Out-Null
 
-    # Truncate output to avoid massive payloads (max 10000 chars)
+    Write-Host "ℹ Running lint command: $LintCommand" -ForegroundColor Cyan
+    $LintOutput = ""
+    try {
+        $LintOutput = Invoke-Expression $LintCommand 2>&1 | Out-String
+        $LintExitCode = $LASTEXITCODE
+    } catch {
+        $LintOutput = $_.Exception.Message
+        $LintExitCode = 1
+    }
+
+    if ($LintExitCode -eq 0) {
+        Write-Host "✓ Code passed automated review." -ForegroundColor Green
+        break
+    }
+
+    Write-Host "✗ Code quality issues found." -ForegroundColor Yellow
+
+    if ($RetryCount -ge $MaxRetries) {
+        Write-Host "⚠ Maximum retries reached ($MaxRetries). Stopping review loop." -ForegroundColor Yellow
+        break
+    }
+
+    Write-Host "ℹ Preparing feedback for Jules session..." -ForegroundColor Cyan
     $TruncatedOutput = if ($LintOutput.Length -gt 10000) { $LintOutput.Substring(0, 10000) } else { $LintOutput }
-
     $Feedback = "Automated Code Review Failed. Please address the following programmatic errors identified by the CI/Linter on branch \`$Branch\`:`n`n\`\`\``n$TruncatedOutput`n\`\`\``n`nPlease fix these issues and update the plan or commit the fixes."
 
     $BodyObj = @{ prompt = $Feedback }
@@ -62,13 +74,21 @@ if ($LintExitCode -ne 0) {
     $Response = Invoke-ApiCall -Method "POST" -Endpoint "/$TaskId:sendMessage" -Body $Body
 
     if ($Response -and -not $Response.error) {
-        Write-Host "✓ Feedback sent successfully to task $TaskId." -ForegroundColor Green
+        Write-Host "✓ Feedback sent successfully. Waiting for Jules to address issues..." -ForegroundColor Green
+
+        # Delegate to wait_for_task script natively
+        & "$Dir\wait_for_task.ps1" -TaskId $TaskId -Interval 15 -TimeoutSeconds 600
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "⚠ Waiting timed out or failed. Stopping loop." -ForegroundColor Yellow
+            break
+        }
     } else {
-        Write-Host "✗ Failed to send feedback to Jules." -ForegroundColor Red
+        Write-Host "✗ Failed to send feedback to Jules. Stopping loop." -ForegroundColor Red
         if ($Response) { $Response | ConvertTo-Json -Depth 5 | Write-Host }
+        break
     }
-} else {
-    Write-Host "✓ Code passed automated review." -ForegroundColor Green
+
+    $RetryCount++
 }
 
 Write-Host "ℹ Restoring original branch: $CurrentBranch" -ForegroundColor Cyan
