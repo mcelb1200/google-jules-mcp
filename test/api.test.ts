@@ -33,14 +33,14 @@ describe('API Tier Tests', () => {
       data: {
         id: 'test-session-id',
         title: 'Test Session',
-        state: 'PENDING'
-      }
+        state: 'PENDING',
+      },
     });
 
     const result = await mcp.createTaskViaApi({
       description: 'Fix the bug',
       repository: 'owner/repo',
-      branch: 'main'
+      branch: 'main',
     });
 
     expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -48,13 +48,13 @@ describe('API Tier Tests', () => {
       expect.objectContaining({
         prompt: 'Fix the bug',
         sourceContext: expect.objectContaining({
-          source: 'sources/github/owner/repo'
-        })
+          source: 'sources/github/owner/repo',
+        }),
       }),
       expect.objectContaining({
         headers: expect.objectContaining({
-          'x-goog-api-key': 'test-api-key'
-        })
+          'x-goog-api-key': 'test-api-key',
+        }),
       })
     );
     expect(result.taskId).toBe('test-session-id');
@@ -66,8 +66,8 @@ describe('API Tier Tests', () => {
       data: {
         name: 'sessions/test-session-id',
         title: 'Test Session',
-        state: 'ACTIVE'
-      }
+        state: 'ACTIVE',
+      },
     });
 
     const result = await mcp.getTaskViaApi({ taskId: 'test-session-id' });
@@ -76,8 +76,8 @@ describe('API Tier Tests', () => {
       'https://jules.googleapis.com/v1alpha/sessions/test-session-id',
       expect.objectContaining({
         headers: expect.objectContaining({
-          'x-goog-api-key': 'test-api-key'
-        })
+          'x-goog-api-key': 'test-api-key',
+        }),
       })
     );
     expect(result.content[0].text).toContain('Task Details (test-session-id) via API:');
@@ -85,12 +85,12 @@ describe('API Tier Tests', () => {
 
   it('jules_send_message sends message via API', async () => {
     mockedAxios.post.mockResolvedValueOnce({
-      data: {}
+      data: {},
     });
 
     const result = await mcp.sendMessageViaApi({
       taskId: 'test-session-id',
-      message: 'Hello Jules'
+      message: 'Hello Jules',
     });
 
     expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -98,16 +98,18 @@ describe('API Tier Tests', () => {
       { prompt: 'Hello Jules' },
       expect.objectContaining({
         headers: expect.objectContaining({
-          'x-goog-api-key': 'test-api-key'
-        })
+          'x-goog-api-key': 'test-api-key',
+        }),
       })
     );
-    expect(result.content[0].text).toContain('Message sent successfully to Jules session test-session-id via API.');
+    expect(result.content[0].text).toContain(
+      'Message sent successfully to Jules session test-session-id via API.'
+    );
   });
 
   it('jules_approve_plan approves plan via API', async () => {
     mockedAxios.post.mockResolvedValueOnce({
-      data: {}
+      data: {},
     });
 
     const result = await mcp.approvePlanViaApi({ taskId: 'test-session-id' });
@@ -117,10 +119,12 @@ describe('API Tier Tests', () => {
       {},
       expect.objectContaining({
         headers: expect.objectContaining({
-          'x-goog-api-key': 'test-api-key'
-        })
+          'x-goog-api-key': 'test-api-key',
+        }),
       })
     );
-    expect(result.content[0].text).toContain('Plan approved successfully for Jules session test-session-id via API.');
+    expect(result.content[0].text).toContain(
+      'Plan approved successfully for Jules session test-session-id via API.'
+    );
   });
 });

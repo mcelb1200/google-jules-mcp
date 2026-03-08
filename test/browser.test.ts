@@ -10,7 +10,7 @@ vi.mock('playwright', () => ({
     launch: vi.fn(),
     connectOverCDP: vi.fn(),
     launchPersistentContext: vi.fn(),
-  }
+  },
 }));
 
 describe('Browser Tier Tests', () => {
@@ -40,37 +40,37 @@ describe('Browser Tier Tests', () => {
         click: vi.fn().mockResolvedValue(true),
         fill: vi.fn().mockResolvedValue(true),
         first: vi.fn().mockReturnValue({ click: vi.fn().mockResolvedValue(true) }),
-        count: vi.fn().mockResolvedValue(1)
+        count: vi.fn().mockResolvedValue(1),
       }),
       keyboard: {
-        press: vi.fn().mockResolvedValue(true)
+        press: vi.fn().mockResolvedValue(true),
       },
       waitForURL: vi.fn().mockResolvedValue(true),
       url: vi.fn().mockReturnValue('https://jules.google.com/task/browser-task-id'),
       setViewportSize: vi.fn().mockResolvedValue(true),
       context: vi.fn().mockReturnValue({
         addCookies: vi.fn().mockResolvedValue(true),
-        cookies: vi.fn().mockResolvedValue([
-            { name: 'sessionid', value: '123', domain: '.google.com' }
-        ])
+        cookies: vi
+          .fn()
+          .mockResolvedValue([{ name: 'sessionid', value: '123', domain: '.google.com' }]),
       }),
       evaluate: vi.fn().mockResolvedValue({
         chatMessages: [{ content: 'test message', type: 'system' }],
         sourceFiles: [{ filename: 'src/index.ts', status: 'modified' }],
-        status: 'active'
-      })
+        status: 'active',
+      }),
     };
 
     mockContext = {
       pages: vi.fn().mockReturnValue([mockPage]),
       newPage: vi.fn().mockResolvedValue(mockPage),
-      addCookies: vi.fn().mockResolvedValue(true)
+      addCookies: vi.fn().mockResolvedValue(true),
     };
 
     mockBrowser = {
       newPage: vi.fn().mockResolvedValue(mockPage),
       contexts: vi.fn().mockReturnValue([mockContext]),
-      close: vi.fn().mockResolvedValue(true)
+      close: vi.fn().mockResolvedValue(true),
     };
 
     vi.mocked(chromium.launch).mockResolvedValue(mockBrowser);
@@ -79,7 +79,7 @@ describe('Browser Tier Tests', () => {
   afterEach(async () => {
     try {
       if (mcp) {
-          await mcp.cleanup();
+        await mcp.cleanup();
       }
     } catch (e) {}
     vi.restoreAllMocks();
@@ -93,7 +93,7 @@ describe('Browser Tier Tests', () => {
 
     const result = await mcp.createTask({
       description: 'Browser task',
-      repository: 'browser/repo'
+      repository: 'browser/repo',
     });
 
     expect(chromium.launch).toHaveBeenCalled();
@@ -112,20 +112,18 @@ describe('Browser Tier Tests', () => {
   });
 
   it('jules_get_cookies returns parsed cookies', async () => {
-      const result = await mcp.getCookies({ format: 'json' });
-      expect(result.content[0].text).toContain('sessionid');
-      expect(mockPage.context().cookies).toHaveBeenCalled();
+    const result = await mcp.getCookies({ format: 'json' });
+    expect(result.content[0].text).toContain('sessionid');
+    expect(mockPage.context().cookies).toHaveBeenCalled();
   });
 
   it('jules_set_cookies adds cookies to context', async () => {
-      const cookies = [{ name: 'testcookie', value: '123', domain: '.google.com' }];
-      const result = await mcp.setCookies({ cookies: JSON.stringify(cookies), format: 'json' });
+    const cookies = [{ name: 'testcookie', value: '123', domain: '.google.com' }];
+    const result = await mcp.setCookies({ cookies: JSON.stringify(cookies), format: 'json' });
 
-      expect(mockPage.context().addCookies).toHaveBeenCalledWith(
-          expect.arrayContaining([
-              expect.objectContaining({ name: 'testcookie', value: '123' })
-          ])
-      );
-      expect(result.content[0].text).toContain('Successfully set 1 cookies');
+    expect(mockPage.context().addCookies).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ name: 'testcookie', value: '123' })])
+    );
+    expect(result.content[0].text).toContain('Successfully set 1 cookies');
   });
 });
