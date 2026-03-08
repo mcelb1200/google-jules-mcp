@@ -1,89 +1,76 @@
 #!/bin/bash
 # audit_report.sh
+# Professional audit reporting for JCLAW sessions
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$DIR/common.sh"
+source "$DIR/github_integration.sh"
 
 TASK_ID=$1
-
 if [ -z "$TASK_ID" ]; then
     echo "Usage: $0 [taskId]"
     exit 1
 fi
 
-echo "=== Generating Audit Report ==="
+REPORT_DIR=".jules/audit"
+mkdir -p "$REPORT_DIR"
+REPORT_FILE="$REPORT_DIR/$TASK_ID.report.md"
 
-RESPONSE=$(api_call "GET" "/$TASK_ID" "")
-if echo "$RESPONSE" | jq -e 'has("error")' > /dev/null; then
-    echo "✗ Failed to fetch session. Response:"
-    echo "$RESPONSE" | jq '.'
-    exit 1
-fi
+echo -e "${YELLOW}Generating comprehensive audit report for $TASK_ID...${NC}"
 
-TITLE=$(echo "$RESPONSE" | jq -r '.title')
-STATE=$(echo "$RESPONSE" | jq -r '.state')
-SOURCE=$(echo "$RESPONSE" | jq -r '.sourceContext.source // "Unknown"')
-PROMPT=$(echo "$RESPONSE" | jq -r '.prompt // "No initial prompt record available."')
+# 1. Fetch data
+SESSION_DATA=$(api_call "GET" "/$TASK_ID" "") || exit 1
+ACTIVITIES=$(api_call "GET" "/$TASK_ID/activities?pageSize=100" "") || exit 1
 
-ACTIVITIES=$(api_call "GET" "/$TASK_ID/activities?pageSize=50" "")
-EVENTS=$(echo "$ACTIVITIES" | jq -r '.activities // []')
+TITLE=$(echo "$SESSION_DATA" | jq -r '.title')
+STATE=$(echo "$SESSION_DATA" | jq -r '.state')
+BRANCH=$(echo "$SESSION_DATA" | jq -r '.sourceContext.githubRepoContext.startingBranch')
+REPO=$(echo "$SESSION_DATA" | jq -r '.sourceContext.source | sub("sources/github/"; "")')
+CREATE_TIME=$(echo "$SESSION_DATA" | jq -r '.createTime')
 
-# Process Activities for Audit
-echo -e "# 🛡️ Jules Session Audit Report\n"
-echo -e "**Session ID**: \`$TASK_ID\`"
-echo -e "**Title**: $TITLE"
-echo -e "**Final State**: \`$STATE\`"
-echo -e "**Repository**: $SOURCE"
-echo -e "**Generated At**: $(date)\n"
+# 2. Get GitHub Context
+PR_LINK=$(get_session_pr_link "$BRANCH" "$REPO")
 
-echo -e "## 📝 Intent Statement (Initial Prompt)\n> $PROMPT\n"
+# 3. Build Report
+cat <<EOF > "$REPORT_FILE"
+# 🦞 JCLAW Session Audit Report: $TASK_ID
+**Title:** $TITLE  
+**State:** $STATE  
+**Created:** $CREATE_TIME  
+**Repository:** $REPO  
+**Branch:** $BRANCH  
+**GitHub Link:** $PR_LINK
 
-echo -e "## 🔄 Delivery Activity Log\n| Timestamp | Event Type | Details |\n| :--- | :--- | :--- |"
+---
 
-for row in $(echo "$EVENTS" | jq -r '.[] | @base64'); do
-    _jq() {
-        echo ${row} | base64 --decode | jq -r ${1}
-    }
-    CREATE_TIME=$(_jq '.createTime')
-    if [ $(_jq 'has("planGenerated")') == "true" ]; then
-        EVENT_TYPE="PLAN_GENERATED"
-        DETAIL="Plan contains $(_jq '.planGenerated.steps | length') steps."
-    elif [ $(_jq 'has("planApproved")') == "true" ]; then
-        EVENT_TYPE="PLAN_APPROVED"
-        DETAIL=""
-    elif [ $(_jq 'has("agentMessaged")') == "true" ]; then
-        EVENT_TYPE="JULES_MESSAGE"
-        DETAIL=$(_jq '.agentMessaged.prompt' | tr '\n' ' ')
-    elif [ $(_jq 'has("userMessaged")') == "true" ]; then
-        EVENT_TYPE="USER_MESSAGE"
-        DETAIL=$(_jq '.userMessaged.prompt' | tr '\n' ' ')
-    elif [ $(_jq 'has("changeSet")') == "true" ]; then
-        EVENT_TYPE="CODE_ARTIFACT"
-        DETAIL="Produced patch: $(_jq '.changeSet.suggestedCommitMessage // "No message"' | tr '\n' ' ')"
-    elif [ $(_jq 'has("sessionCompleted")') == "true" ]; then
-        EVENT_TYPE="COMPLETED"
-        DETAIL=""
-    elif [ $(_jq 'has("sessionFailed")') == "true" ]; then
-        EVENT_TYPE="FAILED"
-        DETAIL=$(_jq '.sessionFailed.reason // "Unknown failure reason"' | tr '\n' ' ')
-    elif [ $(_jq 'has("progressUpdated")') == "true" ]; then
-        EVENT_TYPE="PROGRESS"
-        DETAIL=$(_jq '.progressUpdated.description' | tr '\n' ' ')
-    else
-        EVENT_TYPE=$(_jq 'keys | .[]' | grep -v -E '^(createTime|name|description)$' | head -n 1)
-        if [ -z "$EVENT_TYPE" ]; then EVENT_TYPE="ACTIVITY"; fi
-        DETAIL=$(_jq '.description // "No detail"' | tr '\n' ' ')
+## 🎯 Original Prompt
+$(echo "$SESSION_DATA" | jq -r '.prompt')
+
+---
+
+## 💬 Conversation History
+EOF
+
+echo "$ACTIVITIES" | jq -c '.activities // [] | .[]' | while read -r activity; do
+    if echo "$activity" | jq -e '.agentMessaged' > /dev/null; then
+        echo -e "### 🤖 Jules Message\n$(echo "$activity" | jq -r '.agentMessaged.agentMessage')\n" >> "$REPORT_FILE"
+    elif echo "$activity" | jq -e '.userMessaged' > /dev/null; then
+        echo -e "### 👤 User Message\n$(echo "$activity" | jq -r '.userMessaged.userMessage')\n" >> "$REPORT_FILE"
     fi
-
-    echo "| $(date -d "$CREATE_TIME" '+%Y-%m-%d %H:%M:%S') | $EVENT_TYPE | $DETAIL |"
 done
 
-# Identify Code Outcomes
-PATCHES=$(echo "$EVENTS" | jq -r 'map(select(has("changeSet")) | .changeSet)')
-if [ "$PATCHES" != "null" ] && [ $(echo "$PATCHES" | jq length) -gt 0 ]; then
-    echo -e "\n## 🏁 Verification & Outcome"
-    echo -e "✅ Delivered $(echo "$PATCHES" | jq length) code checkpoint(s). Final patch salvaged: $(echo "$PATCHES" | jq -r '.[0].suggestedCommitMessage')"
+echo "---" >> "$REPORT_FILE"
+echo -e "## 🛠️ Implementation Summary" >> "$REPORT_FILE"
+
+# Extract change summary from the latest completion if available
+SUMMARY=$(echo "$ACTIVITIES" | jq -r '.activities // [] | .[] | select(.agentCompleted) | .agentCompleted.summary' | head -n 1)
+if [ "$SUMMARY" != "null" ] && [ -n "$SUMMARY" ]; then
+    echo -e "$SUMMARY" >> "$REPORT_FILE"
 else
-    echo -e "\n## 🏁 Verification & Outcome"
-    echo -e "❌ No code patches recorded in session history."
+    echo -e "No final summary was recorded by the agent." >> "$REPORT_FILE"
 fi
+
+# Link to code analysis (assumes analyze_code.sh produces meaningful output)
+echo -e "\nDetailed code changes can be reviewed by running \`./agent-skills/bash/analyze_code.sh $TASK_ID\`" >> "$REPORT_FILE"
+
+echo -e "${GREEN}✓ Audit report generated: $REPORT_FILE${NC}"

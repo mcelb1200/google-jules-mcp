@@ -5,38 +5,41 @@ description: Orchestrate Google Jules for autonomous coding tasks, code reviews,
 
 # JCLAW (Jules Crustacean Logic & Automated Workflow)
 
-This skill provides a suite of tools for the "Lobster Pattern" where you (the Brain) orchestrate Jules (the Muscles) in a remote VM.
+Professional suite for the "Lobster Pattern" where you (the Brain) orchestrate Jules (the Muscles) in a remote environment.
 
-## Core Workflow
+## Professional Workflow
 
 ### 1. Delegation
-To offload a task to Jules, use `delegate_task.sh`. This is the primary entry point for autonomous work.
-
+Initialize autonomous work on a specific repository branch.
 ```bash
 ./agent-skills/bash/delegate_task.sh [repository] [branch] [taskId] [instruction]
 ```
+- **repository**: `owner/repo`
+- **branch**: The feature branch for Jules.
+- **instruction**: Detailed prompt or use `@jules` markers in code.
 
-- **repository**: e.g., `owner/repo`
-- **branch**: The feature branch Jules should work on.
-- **instruction**: Detailed prompt for Jules. If omitted, the script looks for `@jules` markers or `.jules/backlog/` files.
+### 2. Session Management (Interactive)
+The primary tool for monitoring, replying to, and approving Jules' work.
+```bash
+./agent-skills/bash/manage_session.sh
+```
+- **Interactive Interface**: Select tasks to view feedback, approve plans, or reply.
+- **GitHub Integration**: Automatically identifies and links associated Pull Requests.
 
-### 2. Monitoring & Feedback
-Check the status of your tasks and respond to feedback if Jules gets stuck.
+### 3. Verification & Auditing
+Generate comprehensive reports and conclude sessions.
+```bash
+./agent-skills/bash/audit_report.sh [taskId]
+```
+- **Enhanced Reports**: Generates `.jules/audit/[taskId].report.md` with full conversation history and PR links.
+- **Conclusion**: Use `./agent-skills/bash/conclude_task.sh` to archive instructions and transition state.
 
-- **List Tasks**: `./agent-skills/bash/list_tasks.sh`
-- **Check Feedback**: `./agent-skills/bash/check_feedback.sh` (Looks for `AWAITING_USER_FEEDBACK`)
-- **Approve Plan**: `./agent-skills/bash/approve_plan.sh [taskId]` (Approves the execution plan)
-- **Send Message**: `./agent-skills/bash/send_message.sh [taskId] [message]`
-
-### 3. Verification & Conclusion
-Once Jules finishes, audit the work and conclude the session.
-
-- **Audit Report**: `./agent-skills/bash/audit_report.sh [taskId]` (Generates a report in `.jules/audit/`)
-- **Code Review**: `./agent-skills/bash/code_review.sh [taskId]` (Retrieves Jules' self-review)
-- **Analyze Changes**: `./agent-skills/bash/analyze_code.sh [taskId]` (Shows the diff and changes)
-- **Conclude**: `./agent-skills/bash/conclude_task.sh [taskId] [completed|incomplete]`
+## Core Utilities
+- **`diagnose.sh`**: Verify environment, dependencies, and API connectivity.
+- **`analyze_code.sh`**: Review diffs and summarized code changes.
+- **`github_integration.sh`**: Library for PR mapping and automated comments.
 
 ## Best Practices
-- **Token Efficiency**: Use these scripts to avoid long-running polling in your own context.
-- **Context Preservation**: Jules works on a remote branch; always audit the changes before merging to main.
-- **Setup**: Ensure `JULES_API_KEY` is set. Run `./agent-skills/bash/setup.sh` to verify.
+- **PR Centricity**: Always check the associated GitHub PR (linked in `manage_session.sh`) before approving execution plans.
+- **Context Integrity**: Audit the final report in `.jules/audit/` before merging any Jules-generated branch to `main`.
+- **Token Efficiency**: Use the interactive manager to minimize active polling turns.
