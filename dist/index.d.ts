@@ -6,11 +6,13 @@ export declare class JCLAW {
   private page;
   private config;
   private dataPath;
+  private jclawMessages;
   constructor();
   private setupToolHandlers;
   private setupResourceHandlers;
   private createBrowserbaseSession;
   private getBrowserbaseConnectUrl;
+  private getJclawPun;
   private parseCookiesFromString;
   private loadCookiesFromFile;
   private saveCookiesToFile;
@@ -20,6 +22,7 @@ export declare class JCLAW {
   private saveSessionCookies;
   private loadTaskData;
   private saveTaskData;
+  private getRandomMessage;
   private extractTaskId;
   private resolveJulesCliPath;
   private runJulesCli;
