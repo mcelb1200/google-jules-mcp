@@ -15,6 +15,14 @@ vi.mock('child_process', () => {
       }
       return { stdout: 'mocked output', stderr: '' };
     }),
+    execFile: vi.fn((...args: any[]) => {
+      const callback = args[args.length - 1];
+      // Basic mock implementation for promisify(execFile)
+      if (typeof callback === 'function') {
+        callback(null, { stdout: 'mocked output', stderr: '' });
+      }
+      return { stdout: 'mocked output', stderr: '' };
+    }),
   };
 });
 
@@ -38,8 +46,8 @@ describe('CLI Tier Tests', () => {
   });
 
   it('jules_cli executes command', async () => {
-    const execMock = vi.mocked(child_process.exec);
-    execMock.mockImplementation((...args: any[]) => {
+    const execFileMock = vi.mocked(child_process.execFile);
+    execFileMock.mockImplementation((...args: any[]) => {
       const callback = args[args.length - 1];
       if (typeof callback === 'function') {
         callback(null, { stdout: 'jules version 1.0.0', stderr: '' });
@@ -49,14 +57,14 @@ describe('CLI Tier Tests', () => {
 
     const result = await mcp.runJulesCli(['version']);
     expect(result).toBe('jules version 1.0.0');
-    expect(execMock).toHaveBeenCalled();
-    const callArgs = execMock.mock.calls[execMock.mock.calls.length - 1][0] as string;
+    expect(execFileMock).toHaveBeenCalled();
+    const callArgs = execFileMock.mock.calls[execFileMock.mock.calls.length - 1][1] as string[];
     expect(callArgs).toContain('version');
   });
 
   it('jules_create_task via CLI parses output for session ID', async () => {
-    const execMock = vi.mocked(child_process.exec);
-    execMock.mockImplementation((...args: any[]) => {
+    const execFileMock = vi.mocked(child_process.execFile);
+    execFileMock.mockImplementation((...args: any[]) => {
       const callback = args[args.length - 1];
       if (typeof callback === 'function') {
         // Simulate typical output with session ID
@@ -77,15 +85,15 @@ describe('CLI Tier Tests', () => {
   });
 
   it('jules_delegate_task pushes branch and initiates task', async () => {
-    const execMock = vi.mocked(child_process.exec);
-    execMock.mockImplementation((...args: any[]) => {
+    const execFileMock = vi.mocked(child_process.execFile);
+    execFileMock.mockImplementation((...args: any[]) => {
       const cmd = args[0];
       const callback = args[args.length - 1];
       if (typeof callback === 'function') {
         // Mock git and jules CLI output
-        if (cmd.includes('git push')) {
+        if (cmd.includes('git push') || (args[0] === 'git' && args[1].includes('push'))) {
           callback(null, { stdout: 'Everything up-to-date', stderr: '' });
-        } else if (cmd.includes('jules')) {
+        } else if (cmd.includes('jules') || args[0] === 'jules') {
           callback(null, { stdout: 'Created session: a1b2c3d4e5f6g7h8', stderr: '' });
         } else {
           callback(null, { stdout: '', stderr: '' });

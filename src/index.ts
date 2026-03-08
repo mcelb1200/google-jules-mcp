@@ -14,7 +14,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import axios from 'axios';
-import { exec, execFile } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
 // Configuration interface
@@ -1460,14 +1460,14 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
   }
 
   private async resolveJulesCliPath(): Promise<string> {
-    const cliPath = this.config.julesCliPath || "jules";
+    const cliPath = this.config.julesCliPath || 'jules';
     const execFilePromise = promisify(execFile);
 
     // 1. Try "jules" directly (check PATH)
     try {
       const checkCmd = os.platform() === 'win32' ? 'where' : 'which';
-      await execFilePromise(checkCmd, ["jules"]);
-      return "jules";
+      await execFilePromise(checkCmd, ['jules']);
+      return 'jules';
     } catch (e) {
       // Not in path
     }
@@ -1501,23 +1501,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     const execFilePromise = promisify(execFile);
     const cliPath = await this.resolveJulesCliPath();
 
-    // Safely wrap and escape arguments for the shell
-    const escapedArgs = args.map((arg) => {
-      // For Windows, wrap in double quotes and escape internal double quotes
-      if (os.platform() === 'win32') {
-        const escaped = arg.replace(/"/g, '""');
-        return `"${escaped}"`;
-      } else {
-        // For POSIX, wrap in single quotes and handle internal single quotes
-        const escaped = arg.replace(/'/g, "'\\''");
-        return `'${escaped}'`;
-      }
-    });
-
-    const command = `${cliPath} ${escapedArgs.join(' ')} < /dev/null`;
-
     try {
-      console.error(`Executing Jules CLI: ${cliPath} ${args.join(" ")}`);
+      console.error(`Executing Jules CLI: ${cliPath} ${args.join(' ')}`);
       const { stdout, stderr } = await execFilePromise(cliPath, args);
       if (stderr && !stdout) {
         return stderr;
@@ -1530,10 +1515,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
   private async runGitCommand(args: string[]): Promise<string> {
     const execFilePromise = promisify(execFile);
-    const execPromise = promisify(exec);
-    const command = `git ${args.join(' ')}`;
     try {
-      console.error(`Executing Git command: git ${args.join(" ")}`);
+      console.error(`Executing Git command: git ${args.join(' ')}`);
       const { stdout } = await execFilePromise('git', args);
       return stdout.trim();
     } catch (error: any) {
@@ -1543,10 +1526,8 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
 
   private async runGhCommand(args: string[]): Promise<string> {
     const execFilePromise = promisify(execFile);
-    const execPromise = promisify(exec);
-    const command = `gh ${args.join(' ')}`;
     try {
-      console.error(`Executing GH command: gh ${args.join(" ")}`);
+      console.error(`Executing GH command: gh ${args.join(' ')}`);
       const { stdout } = await execFilePromise('gh', args);
       return stdout.trim();
     } catch (error: any) {
@@ -3213,7 +3194,7 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
     try {
       resolvedCliPath = await this.resolveJulesCliPath();
       const execFilePromise = promisify(execFile);
-      await execFilePromise(resolvedCliPath, ["--version"]);
+      await execFilePromise(resolvedCliPath, ['--version']);
       hasJulesCli = true;
     } catch (e) {
       // CLI not found or errored

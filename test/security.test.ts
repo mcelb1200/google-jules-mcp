@@ -5,7 +5,7 @@ import { JCLAW } from '../src/index.js';
 vi.mock('child_process', () => {
   return {
     exec: vi.fn(),
-    execFile: vi.fn()
+    execFile: vi.fn(),
   };
 });
 
@@ -52,7 +52,10 @@ describe('Security Vulnerability Fix Verification', () => {
 
     expect(execFileMock).toHaveBeenCalled();
     expect(execFileMock.mock.calls[0][0]).toBe('git');
-    expect(execFileMock.mock.calls[0][1]).toEqual(['checkout', 'main; touch git_vulnerability.txt']);
+    expect(execFileMock.mock.calls[0][1]).toEqual([
+      'checkout',
+      'main; touch git_vulnerability.txt',
+    ]);
   });
 
   it('runJulesCli uses execFile and no longer needs manual escaping or shell redirection', async () => {
@@ -72,7 +75,12 @@ describe('Security Vulnerability Fix Verification', () => {
 
     expect(execFileMock).toHaveBeenCalled();
     expect(execFileMock.mock.calls[0][0]).toBe('/usr/local/bin/jules');
-    expect(execFileMock.mock.calls[0][1]).toEqual(['remote', 'new', '--session', 'Exploit`touch jules_vulnerability.txt`']);
+    expect(execFileMock.mock.calls[0][1]).toEqual([
+      'remote',
+      'new',
+      '--session',
+      'Exploit`touch jules_vulnerability.txt`',
+    ]);
     // manual escaping and < /dev/null should be gone
   });
 });
