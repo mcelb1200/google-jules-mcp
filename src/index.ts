@@ -2810,7 +2810,9 @@ Remember: Always start with \`jules_session_info\` and \`jules_screenshot\` to u
         const files = await fs.readdir(activeDir);
         const found = files.find(f => f.includes(actualTaskId));
         if (found) sourceFile = path.join(activeDir, found);
-      } catch (e) {}
+      } catch (e) {
+        console.error(`Error reading directory ${activeDir}:`, e);
+      }
     }
 
     if (!sourceFile) {
