@@ -4,19 +4,26 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$DIR/common.sh"
 
-STATUS=$1
-REPOSITORY=$2
-LIMIT=${3:-10}
+LIMIT=${1:-10}
 
-echo "=== Listing Tasks ==="
+echo -e "${YELLOW}=== Listing Jules Tasks ===${NC}"
 
-RESPONSE=$(api_call "GET" "?pageSize=$LIMIT" "")
+RESPONSE=$(api_call "GET" "?pageSize=$LIMIT" "") || exit 1
 TASKS=$(echo "$RESPONSE" | jq '.sessions // []')
 
-if [ "$TASKS" = "null" ]; then
-    echo "✗ Failed to retrieve tasks."
-    echo "$RESPONSE" | jq '.'
-    exit 1
+if [ "$TASKS" = "null" ] || [ $(echo "$TASKS" | jq length) -eq 0 ]; then
+    echo "No tasks found."
+    exit 0
 fi
 
-echo "$TASKS" | jq -r '.[].id // .name | split("/") | last as $id | .title as $title | .state as $state | "\($id) - \($title) [\($state)]"'
+echo "$TASKS" | jq -r ".[] | {id: (.id // .name | split(\"/\") | last), title: .title, state: .state} | \"\(.id) - \(.title) [\(.state)]\"" | while read -r line; do
+    if [[ "$line" == *"[COMPLETED]"* ]]; then
+        echo -e "${GREEN}$line${NC}"
+    elif [[ "$line" == *"[FAILED]"* ]]; then
+        echo -e "${RED}$line${NC}"
+    elif [[ "$line" == *"[AWAITING_USER_FEEDBACK]"* ]]; then
+        echo -e "${YELLOW}$line${NC}"
+    else
+        echo "$line"
+    fi
+done
