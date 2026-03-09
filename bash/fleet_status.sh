@@ -4,13 +4,16 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$DIR/common.sh"
 
-echo -e "${YELLOW}=== JULES AI FLEET DASHBOARD ===${NC}"
+# Identify current repository
+CURRENT_REPO=$(git remote get-url origin | sed 's/.*github.com[:\/]//;s/\.git$//')
+echo -e "${YELLOW}=== JULES AI FLEET DASHBOARD: $CURRENT_REPO ===${NC}"
 
 RESPONSE=$(api_call "GET" "?pageSize=50" "") || exit 1
-SESSIONS=$(echo "$RESPONSE" | jq -c '.sessions // [] | .[]')
+# Filter by source repository
+SESSIONS=$(echo "$RESPONSE" | jq -c ".sessions // [] | .[] | select(.sourceContext.source == \"sources/github/$CURRENT_REPO\")")
 
 if [ -z "$SESSIONS" ]; then
-    echo "No active sessions found."
+    echo "No active sessions found for $CURRENT_REPO."
     exit 0
 fi
 
