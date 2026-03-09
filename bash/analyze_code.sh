@@ -66,12 +66,22 @@ for row in $(echo "$EVENTS" | jq -r '.[] | @base64'); do
     echo "- $EVENT_TYPE: $DETAIL"
 done
 
-PATCHES=$(echo "$EVENTS" | jq -r 'map(select(has("changeSet")) | .changeSet)')
-if [ "$PATCHES" != "null" ] && [ $(echo "$PATCHES" | jq length) -gt 0 ]; then
-    LATEST_PATCH=$(echo "$PATCHES" | jq -r '.[0]')
+# Find patches in the nested structure
+PATCHES=$(echo "$ACTIVITIES" | jq -r '.activities[] | select(.artifacts) | .artifacts[] | select(.changeSet) | .changeSet')
+if [ "$PATCHES" != "" ] && [ "$PATCHES" != "null" ]; then
+    # Get the latest (first in list)
+    LATEST_PATCH=$(echo "$PATCHES" | head -n 1)
     if [ "$RETURN_PATCH" = "true" ]; then
-        echo -e "\n\n--- FULL GIT PATCH ---\n$(echo "$LATEST_PATCH" | jq -r '.gitPatch')\n\n"
+        echo -e "\n\n--- FULL GIT PATCH ---"
+        echo "$ACTIVITIES" | jq -r '.activities[] | select(.artifacts) | .artifacts[] | select(.changeSet) | .changeSet.gitPatch.contents // .changeSet.gitPatch // empty' | head -n 1
+        echo -e "\n\n"
     else
-        echo -e "\n\n--- LATEST CODE ARTIFACT ---\nCommit Message: $(echo "$LATEST_PATCH" | jq -r '.suggestedCommitMessage // "N/A"')\nPatch Snippet (first 500 chars):\n$(echo "$LATEST_PATCH" | jq -r '.gitPatch | .[0:500]')...\n*Use returnPatch: true to get the full diff.*"
+        COMMIT_MSG=$(echo "$ACTIVITIES" | jq -r '.activities[] | select(.artifacts) | .artifacts[] | select(.changeSet) | .changeSet.suggestedCommitMessage // empty' | head -n 1)
+        PATCH_TEXT=$(echo "$ACTIVITIES" | jq -r '.activities[] | select(.artifacts) | .artifacts[] | select(.changeSet) | .changeSet.gitPatch.contents // .changeSet.gitPatch // empty' | head -n 1)
+        echo -e "\n\n--- LATEST CODE ARTIFACT ---"
+        echo "Commit Message: ${COMMIT_MSG:-N/A}"
+        echo "Patch Snippet (first 500 chars):"
+        echo "${PATCH_TEXT:0:500}..."
+        echo "*Use returnPatch: true to get the full diff.*"
     fi
 fi

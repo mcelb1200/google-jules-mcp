@@ -75,14 +75,16 @@ if [ "$PUSH_FIRST" = "true" ]; then
     echo -e "${GREEN}✓ Remote verification successful.${NC}"
 fi
 
-# Inject ignores (Primary Shield)
+# Inject ignores and DNA (Primary Shield)
+DNA_HEADER="### 🧬 Project DNA:\n- **Language**: C++17 (Strict MISRA compliance where requested)\n- **Build System**: PlatformIO\n- **Test Framework**: Google Test (GTest)\n- **Architecture**: Direct Interface Model (MidiProcessor based)\n\n"
+
 IGNORE_TEXT=""
 if [ -f ".jclaw-ignore" ]; then
     IGNORES=$(cat .jclaw-ignore | grep -v '^#' | sed 's/^/- /')
-    IGNORE_TEXT="\n\n### 🛡️ Restricted Files (DO NOT MODIFY):\n$IGNORES"
+    IGNORE_TEXT="### 🛡️ Restricted Files (DO NOT MODIFY):\n$IGNORES\n\n"
 fi
 
-FINAL_PROMPT=$(printf "%s%b" "$FINAL_PROMPT" "$IGNORE_TEXT")
+FINAL_PROMPT=$(printf "%b%b%s" "$DNA_HEADER" "$IGNORE_TEXT" "$FINAL_PROMPT")
 FINAL_PROMPT_JSON=$(echo "$FINAL_PROMPT" | jq -Rs .)
 
 TITLE="[Delegated] ${TASK_ID:-$BRANCH}"
