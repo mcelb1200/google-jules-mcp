@@ -49,8 +49,13 @@ fi
 # Instead, we will save it locally and instruct the user to apply it, 
 # OR we use gh_api_push_file for specific files if we can parse them.
 
-echo "Artifacts recovered. Saving to recovery_$TASK_ID.patch"
-echo "$PATCH_CONTENT" > "recovery_$TASK_ID.patch"
+LOG_DIR=".jules/logs"
+mkdir -p "$LOG_DIR"
+PATCH_FILE="$LOG_DIR/recovery_$TASK_ID.patch"
+
+echo "Artifacts recovered. Saving to $PATCH_FILE"
+echo "$PATCH_CONTENT" > "$PATCH_FILE"
 
 echo -e "${GREEN}✓ Artifacts recovered successfully.${NC}"
-echo "To apply manually: git checkout $BRANCH && git apply recovery_$TASK_ID.patch"
+echo "To apply manually: git checkout $BRANCH && git apply $PATCH_FILE"
+
